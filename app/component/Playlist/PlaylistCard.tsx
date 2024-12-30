@@ -9,7 +9,7 @@ interface PlaylistCardProps {
 
 const PlaylistCard = ({ name, image, followers_count }: PlaylistCardProps) => {
     return (
-        <div className="group relative overflow-hidden border-2 border-green-600 rounded-xl bg-zinc-900/40 p-4 transition-all duration-300 hover:bg-zinc-900/60 backdrop-blur-sm hover:cursor-pointer ">
+        <div className="group relative overflow-hidden border-2 border-spotify rounded-xl bg-zinc-900/40 p-4 transition-all duration-300 hover:bg-zinc-900/60 backdrop-blur-sm hover:cursor-pointer ">
             <div className="relative aspect-square w-full overflow-hidden rounded-lg">
                 <Image
                     src={image}

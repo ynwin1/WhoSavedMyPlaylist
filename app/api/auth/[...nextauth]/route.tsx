@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession } from "next-auth";
+import NextAuth, { DefaultSession, AuthOptions } from "next-auth";
 import SpotifyProvider from "next-auth/providers/spotify";
 import { JWT } from "next-auth/jwt";
 
@@ -43,7 +43,7 @@ if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET) {
     throw new Error('Missing Spotify API credentials');
 }
 
-const handler = NextAuth({
+export const authOptions: AuthOptions = {
     providers: [
         SpotifyProvider({
             clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -91,7 +91,7 @@ const handler = NextAuth({
             };
         },
     },
-});
+}
 
 async function refreshAccessToken(token: Token): Promise<Token> {
     try {
@@ -127,5 +127,7 @@ async function refreshAccessToken(token: Token): Promise<Token> {
         };
     }
 }
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

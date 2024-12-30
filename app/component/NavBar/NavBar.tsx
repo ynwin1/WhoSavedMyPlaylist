@@ -9,7 +9,7 @@ const NavBar = () => {
     const {data: session} = useSession();
 
     const navClass = "flex justify-between items-center p-4 bg-gray-800 text-white";
-    const titleClass = "text-2xl max-md:text-xl on-hover:cursor-pointer on-hover:text-opacity-20";
+    const titleClass = "text-2xl max-md:text-xl on-hover:cursor-pointer on-hover:text-blue-600";
 
     if (!session) {
         return (

@@ -22,6 +22,7 @@ const Page = () => {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4">
+            <img src={session?.user?.image} alt="user image" className="rounded-full h-24 w-24" />
             <h1 className="text-3xl font-bold text-white">
                 {`Welcome, ${session?.user?.name}!`}
             </h1>

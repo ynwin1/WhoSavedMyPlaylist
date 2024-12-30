@@ -1,6 +1,6 @@
-import NextAuth, {DefaultSession} from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
 import SpotifyProvider from "next-auth/providers/spotify";
-import {JWT} from "next-auth/jwt";
+import { JWT } from "next-auth/jwt";
 
 // Scopes
 const scopes = [
@@ -12,6 +12,11 @@ const scopes = [
 declare module "next-auth" {
     interface Session extends DefaultSession {
         accessToken?: string;
+        user: {
+            id?: string;
+            name?: string;
+            image?: string;
+        } & DefaultSession["user"];
     }
 }
 
@@ -20,6 +25,9 @@ interface Token extends JWT {
     refreshToken: string;
     accessTokenExpires: number;
     error?: string;
+    id?: string;
+    name?: string;
+    image?: string;
 }
 
 interface SpotifyTokenResponse {
@@ -50,24 +58,36 @@ const handler = NextAuth({
     callbacks: {
         async jwt({ token, user, account }) {
             if (account && user) {
+                // Store user data in the token on first sign-in
                 return {
-                    accessToken: account.accessToken,
-                    refreshToken: account.refreshToken,
+                    accessToken: account.access_token,
+                    refreshToken: account.refresh_token,
                     accessTokenExpires: (account.expires_at ?? 0) * 1000,
-                }
+                    id: user.id,
+                    name: user.name,
+                    image: user.image,
+                };
             }
 
-            // return token if it is not expired
+            // Return previous token if access token has not expired
             if (Date.now() < (token.accessTokenExpires as number)) {
                 return token;
             }
 
+            // Access token has expired, refresh it
             return await refreshAccessToken(token as Token);
         },
         async session({ session, token }) {
+            // Pass properties from token to session
             return {
                 ...session,
-                accessToken: token.accessToken as string
+                accessToken: token.accessToken as string,
+                user: {
+                    ...session.user,
+                    id: token.id,
+                    name: token.name,
+                    image: token.image,
+                },
             };
         },
     },
@@ -78,6 +98,7 @@ async function refreshAccessToken(token: Token): Promise<Token> {
         const basic = Buffer.from(
             `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
         ).toString("base64");
+
         const response = await fetch(SPOTIFY_TOKEN_URL, {
             method: "POST",
             headers: {
@@ -93,10 +114,9 @@ async function refreshAccessToken(token: Token): Promise<Token> {
         const refreshedTokens: SpotifyTokenResponse = await response.json();
 
         return {
-            ...token,
+            ...token, // Preserve user properties from the previous token
             accessToken: refreshedTokens.access_token,
             accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
-            // fall back to old refresh token in case new one is not provided
             refreshToken: refreshedTokens.refresh_token ?? token.refreshToken,
         };
     } catch (e) {

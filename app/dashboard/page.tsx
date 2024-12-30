@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import SignOutButton from "@/app/component/Buttons/SignOutButton";
+import PlaylistCard from "@/app/component/Playlist/PlaylistCard";
 
 type User = {
     id: string;
@@ -32,23 +33,23 @@ export default async function Page() {
         playlists: []
     };
 
+    const headers = {
+        'Authorization': `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json'
+    }
+
     try {
         const response = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
-            headers: {
-                'Authorization': `Bearer ${session.accessToken}`,
-                'Content-Type': 'application/json'
-            }
+            headers: headers
         });
 
         const data = await response.json();
-        const playlist_ids = data.items.map((playlist: any) => playlist.id);
+        const public_playlists = data.items.filter((playlist: any) => playlist.public);
+        const playlist_ids = public_playlists.map((playlist: any) => playlist.id);
 
         const playlistPromises = playlist_ids.map(async (id: string) => {
             const response = await fetch(`https://api.spotify.com/v1/playlists/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${session.accessToken}`,
-                    'Content-Type': 'application/json'
-                }
+                headers: headers
             });
             const playlist_data = await response.json();
             console.log(`Playlist name: ${playlist_data.name} & followers: ${playlist_data.followers.total}`);
@@ -66,17 +67,20 @@ export default async function Page() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4">
+        <div className="min-h-screen flex flex-col items-center justify-center gap-12 p-4">
             <img
                 src={session.user?.image || ''}
                 alt="user image"
-                className="rounded-full h-24 w-24"
+                className="rounded-full h-32 w-32 mt-6"
             />
             <h1 className="text-3xl font-bold text-white">
                 {`Welcome, ${session.user?.name}!`}
             </h1>
-            {/* Note: SignOutButton needs to remain client-side */}
-            <SignOutButton />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-20">
+                {user.playlists.map((playlist, index) => (
+                    playlist.user_created && <PlaylistCard key={index} name={playlist.name} image={playlist.image} followers_count={playlist.followers} />
+                ))}
+            </div>
         </div>
     );
 }

@@ -2,7 +2,6 @@
 import { lusitana } from "@/app/component/Fonts/fonts";
 import { SessionProvider } from "next-auth/react";
 import "./globals.css";
-import NavBar from "@/app/component/NavBar/NavBar";
 
 export default function RootLayout({
   children,

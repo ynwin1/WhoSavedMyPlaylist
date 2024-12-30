@@ -23,7 +23,7 @@ const Page = () => {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center gap-6 p-4">
             <h1 className="text-3xl font-bold text-white">
-                Welcome!
+                {`Welcome, ${session?.user?.name}!`}
             </h1>
             <SignOutButton />
         </div>

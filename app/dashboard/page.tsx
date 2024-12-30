@@ -74,7 +74,7 @@ export default async function Page() {
                 className="rounded-full h-32 w-32 mt-6"
             />
             <h1 className="text-3xl font-bold text-white">
-                {`Welcome, ${session.user?.name}!`}
+                {`Howdy, ${session.user?.name}!`}
             </h1>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-20">
                 {user.playlists.map((playlist, index) => (

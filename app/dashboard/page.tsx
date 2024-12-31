@@ -128,7 +128,7 @@ export default async function Page() {
             <img
                 src={session.user?.image || ''}
                 alt="user image"
-                className="rounded-full h-32 w-32 mt-6"
+                className="rounded-full h-32 w-32 mt-6 ring-2 ring-white/20 hover:ring-green-500 transition-all duration-300"
             />
             <h1 className="text-3xl font-bold text-white">
                 {`Howdy, ${session.user?.name}!`}

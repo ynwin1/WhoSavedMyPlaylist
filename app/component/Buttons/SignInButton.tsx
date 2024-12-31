@@ -6,9 +6,12 @@ const SignInButton = () => {
     return (
         <button
             onClick={() => signIn("spotify", {callbackUrl: "/dashboard"})}
-            className="px-6 py-3 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors"
+            className="px-4 py-2 rounded-full bg-green-500 hover:bg-green-400 text-white font-medium
+                 transform transition-all duration-300 hover:scale-105
+                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black
+                 border-2 border-white"
         >
-            Sign in
+            Connect Spotify
         </button>
     )
 }

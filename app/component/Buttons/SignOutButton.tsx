@@ -6,7 +6,12 @@ const SignOutButton = () => {
     return (
         <button
             onClick={() => signOut({callbackUrl: "/"})}
-            className="px-6 py-3 bg-red-500 text-white rounded-full border-2 border-white font-semibold hover:bg-red-700 transition-colors"
+            className="
+            px-4 py-2 rounded-full bg-green-500 hover:bg-green-400 text-white font-medium
+                 transform transition-all duration-300 hover:scale-105
+                 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black
+                 border-2 border-white
+                 "
         >
             Log Out
         </button>

@@ -32,6 +32,7 @@ export type Playlist = {
 
 type PlaylistDB = {
     id: string;
+    user_created: boolean;
     name: string;
     image: string;
     followers_count: number;
@@ -98,27 +99,42 @@ export default async function Page() {
         await User.updateOne({ id: user.id }, userForDB, { upsert: true });
 
         // create or update subscribed playlists in the database
-        const subscribed_playlists: Playlist[] = user.playlists.filter(playlist => !playlist.user_created);
-        const subscribedPlaylistsForDB: PlaylistDB[] = subscribed_playlists.map(playlist => ({
+        const playlistsForDB: PlaylistDB[] = user.playlists.map(playlist => ({
             id: playlist.id,
+            user_created: playlist.user_created,
             name: playlist.name,
             image: playlist.image,
             followers_count: playlist.followers_count,
             followers: []
         }));
-        for (const playlist of subscribedPlaylistsForDB) {
-            await Playlist.updateOne(
-                { id: playlist.id },
-                {
-                    $addToSet : {followers: user.id },
-                    $setOnInsert: {
-                        id: playlist.id,
-                        name: playlist.name,
-                        image: playlist.image,
-                        followers_count: playlist.followers_count
-                    }
-                },
-                { upsert: true });
+        for (const playlist of playlistsForDB) {
+            if (playlist.user_created) {
+                await Playlist.updateOne(
+                    { id: playlist.id },
+                    {
+                        $set: {
+                            id: playlist.id,
+                            name: playlist.name,
+                            image: playlist.image,
+                            followers_count: playlist.followers_count,
+                        }
+                    },
+                    { upsert: true }
+                );
+            } else {
+                await Playlist.updateOne(
+                    { id: playlist.id },
+                    {
+                        $addToSet : {followers: user.id },
+                        $setOnInsert: {
+                            id: playlist.id,
+                            name: playlist.name,
+                            image: playlist.image,
+                            followers_count: playlist.followers_count
+                        }
+                    },
+                    { upsert: true });
+            }
         }
     } catch (e) {
         console.error("Error fetching user playlists:", e);
@@ -127,7 +143,7 @@ export default async function Page() {
     return (
         <div className="min-h-screen bg-black">
             {/* Header Section with fixed height */}
-            <div className="bg-spotify h-[10vh] lg:h-[15vh] xl:h-[20vh] w-full" />
+            <div className="bg-spotify h-[15vh] xl:h-[20vh] w-full" />
 
             {/* Main Content */}
             <div className="max-w-[1400px] mx-auto px-6 relative">

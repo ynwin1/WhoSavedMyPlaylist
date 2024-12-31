@@ -11,7 +11,7 @@ const SignInButton = () => {
                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black
                  border-2 border-white"
         >
-            Connect Spotify
+            Spotify Log In
         </button>
     )
 }

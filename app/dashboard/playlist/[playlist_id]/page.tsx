@@ -5,6 +5,7 @@ import {redirect} from "next/navigation";
 import Playlist from "@/app/model/Playlist";
 import Image from "next/image";
 import PlaylistFollowersTable from "@/app/component/Playlist/PlaylistFollowersTable";
+import Link from "next/link";
 
 interface PlaylistPageProps {
     params:Promise<{playlist_id: string}>;
@@ -66,7 +67,6 @@ const Page = async ({params}: PlaylistPageProps) => {
 
     // TODO - redirect to dashboard if playlist owner id is not the same as session user id
 
-
     if (dbPlaylist) {
         const knownFollowersCount = dbPlaylist.followers.length;
         return (
@@ -81,9 +81,18 @@ const Page = async ({params}: PlaylistPageProps) => {
                         className="absolute left-20 max-md:left-10 transform -translate-y-1/2 rounded-full border-4 border-white max-md:w-[8rem] max-md:h-[8rem]"
                     />
                     <div className="flex flex-col gap-6 text-center mt-10 z-10 max-lg:mt-24">
-                        <h1 className="text-3xl font-bold text-white">{dbPlaylist.name}</h1>
+                        <h1 className="text-3xl font-bold text-white hover:text-gray-300">
+                            <Link href={`https://open.spotify.com/playlist/${playlist_id}`} target="_blank">
+                                {dbPlaylist.name}
+                            </Link>
+                        </h1>
+
                         <h2 className="text-xl font-semibold text-white max-lg:text-base">
-                            {`Out of ${spotifyFollowersCount} followers, ${knownFollowersCount} follower(s) are on this platform`}
+                            {knownFollowersCount === 0 ?
+                                "We do not know any followers of this playlist yet"
+                                :
+                                `Out of ${spotifyFollowersCount} followers, ${knownFollowersCount} follower(s) are on this platform`
+                            }
                         </h2>
                     </div>
                     <PlaylistFollowersTable followers={knownFollowers} />

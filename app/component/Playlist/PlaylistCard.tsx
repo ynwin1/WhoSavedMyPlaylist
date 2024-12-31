@@ -15,8 +15,8 @@ const PlaylistCard = ({ name, image, followers_count }: PlaylistCardProps) => {
                 <Image
                     src={image}
                     alt={`${name} playlist cover`}
-                    width={200}
-                    height={200}
+                    width={300}
+                    height={300}
                     className="object-cover transition-all duration-300 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />

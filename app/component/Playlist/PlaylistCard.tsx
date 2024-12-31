@@ -8,6 +8,7 @@ interface PlaylistCardProps {
 }
 
 const PlaylistCard = ({ name, image, followers_count }: PlaylistCardProps) => {
+    // console.log("Followers count: ", followers_count);
     return (
         <div className="group relative overflow-hidden border-2 border-spotify rounded-xl bg-zinc-900/40 p-4 transition-all duration-300 hover:bg-zinc-900/60 backdrop-blur-sm hover:cursor-pointer ">
             <div className="relative aspect-square w-full overflow-hidden rounded-lg">
@@ -28,7 +29,7 @@ const PlaylistCard = ({ name, image, followers_count }: PlaylistCardProps) => {
 
                 <div className="flex items-center gap-1.5 text-sm text-zinc-400">
                     <span>
-                        {followers_count.toLocaleString()} followers
+                        {followers_count} followers
                     </span>
                 </div>
             </div>

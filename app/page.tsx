@@ -2,8 +2,13 @@ import React from 'react';
 import SignInButton from '@/app/component/Buttons/SignInButton';
 import { Users, Lock } from 'lucide-react';
 import FeatureCard from '@/app/component/Home/FeatureCard';
+import {getServerSession} from "next-auth/next";
+import {authOptions} from "@/app/api/auth/[...nextauth]/route";
+import DashboardButton from "@/app/component/Buttons/DashboardButton";
 
-export default function Page() {
+export default async function Page() {
+    const session = await getServerSession(authOptions);
+
     return (
         <div className="min-h-screen bg-black text-white">
             <div className="relative min-h-[60vh] flex flex-col items-center justify-center px-4">
@@ -17,11 +22,14 @@ export default function Page() {
                     <p className="text-xl text-white/80 max-w-xl mx-auto max-md:text-lg">
                         Discover who's enjoying your musical taste.
                     </p>
-                    <SignInButton />
+                    {session ?
+                        <DashboardButton/>
+                        :
+                        <SignInButton />
+                    }
                 </div>
             </div>
 
-            {/* Features Section */}
             <div className="max-w-6xl mx-auto px-4 py-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FeatureCard

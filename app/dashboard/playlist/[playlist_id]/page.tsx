@@ -82,11 +82,11 @@ const Page = async ({params}: PlaylistPageProps) => {
                     />
                     <div className="flex flex-col gap-6 text-center mt-10 z-10 max-lg:mt-24">
                         <h1 className="text-3xl font-bold text-white">{dbPlaylist.name}</h1>
-                        <h2 className="text-xl font-semibold text-white">
+                        <h2 className="text-xl font-semibold text-white max-lg:text-base">
                             {`Out of ${spotifyFollowersCount} followers, ${knownFollowersCount} follower(s) are on this platform`}
                         </h2>
                     </div>
-                    {/*<PlaylistFollowersTable followers={knownFollowers} />*/}
+                    <PlaylistFollowersTable followers={knownFollowers} />
                 </div>
             </div>
         )

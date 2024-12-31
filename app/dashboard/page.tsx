@@ -141,7 +141,7 @@ export default async function Page() {
             </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-20 max-md:gap-10">
                 {ownedPlaylists.map((playlist, index) => (
-                    <Link href={`/dashboard/${playlist.id}`} key={index}>
+                    <Link href={`/dashboard/playlist/${playlist.id}`} key={index}>
                         <PlaylistCard key={index} name={playlist.name} image={playlist.image} followers_count={playlist.followers_count}/>
                     </Link>
                 ))}

@@ -5,6 +5,7 @@ import User from "@/app/model/User";
 import Playlist from "@/app/model/Playlist";
 import PlaylistCard from "@/app/component/Playlist/PlaylistCard";
 import connectDB from "@/app/lib/mongodb";
+import Link from "next/link";
 
 type User = {
     id: string;
@@ -55,6 +56,8 @@ export default async function Page() {
         'Content-Type': 'application/json'
     }
 
+    let ownedPlaylists: Playlist[] = [];
+
     try {
         const response = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
             headers: headers
@@ -80,9 +83,9 @@ export default async function Page() {
             return playlist;
         });
         user.playlists = await Promise.all(playlistPromises);
+        ownedPlaylists = user.playlists.filter(playlist => playlist.user_created);
 
         await connectDB();
-
         // create or update user in the database
         let userForDB: UserDB = {
             id: user.id,
@@ -130,10 +133,17 @@ export default async function Page() {
             <h1 className="text-3xl font-bold text-white">
                 {`Howdy, ${session.user?.name}!`}
             </h1>
+            <h2 className="text-xl text-white max-md:text-base">
+                {`You have created ${ownedPlaylists.length} playlists.`}
+            </h2>
+            <h2 className="text-xl text-white max-md:text-base">
+                Click on each to find out who saved it!
+            </h2>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:gap-20 max-md:gap-10">
-                {user.playlists.map((playlist, index) => (
-                    playlist.user_created &&
-                    <PlaylistCard key={index} name={playlist.name} image={playlist.image} followers_count={playlist.followers_count}/>
+                {ownedPlaylists.map((playlist, index) => (
+                    <Link href={`/dashboard/${playlist.id}`} key={index}>
+                        <PlaylistCard key={index} name={playlist.name} image={playlist.image} followers_count={playlist.followers_count}/>
+                    </Link>
                 ))}
             </div>
         </div>

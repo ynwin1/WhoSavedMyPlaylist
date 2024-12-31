@@ -28,7 +28,7 @@ const NavBar = () => {
                 <h1 className={titleClass}>WhoSavedMyPlaylist</h1>
             </Link>
             <div className="flex flex-row items-center gap-6">
-                <h1>Welcome!</h1>
+                <h1 className="hidden md:block">Welcome!</h1>
                 <SignOutButton />
             </div>
         </div>

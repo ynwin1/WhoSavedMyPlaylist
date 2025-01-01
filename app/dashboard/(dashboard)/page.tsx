@@ -11,6 +11,7 @@ import {Metadata} from "next";
 import DashboardRefreshButton from "@/app/component/Buttons/DashboardRefreshButton";
 import {playlistPaginationLimit} from "@/app/lib/utils";
 import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
+import ItemsPerPageSelector, {useScreenSizeLimits} from "@/app/component/Pagination/ItemsPerPageSelector";
 
 export const metadata: Metadata = {
     title: 'Dashboard',
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 }
 
 type DashboardPageProps = {
-    searchParams: Promise<{page?: number}>;
+    searchParams: Promise<{page?: number, limit?: number}>;
 }
 
 export type User = {
@@ -102,8 +103,8 @@ export async function fetchFromSpotify(user: User, headers: any) {
             return playlist;
         });
         const allPlaylists = await Promise.all(playlistPromises);
-        user.created_playlists = allPlaylists.filter(playlist => playlist.owner_id === user.id);
-        user.followed_playlists = allPlaylists.filter(playlist => playlist.owner_id !== user.id);
+        user.created_playlists = allPlaylists.filter(playlist => playlist.owner_id === user.id).sort((a, b) => b.followers_count - a.followers_count);
+        user.followed_playlists = allPlaylists.filter(playlist => playlist.owner_id !== user.id).sort((a, b) => b.followers_count - a.followers_count);
 
         await connectDB();
         // create or update user in the database
@@ -117,7 +118,7 @@ export async function fetchFromSpotify(user: User, headers: any) {
         }
         await User.updateOne({ id: user.id }, userForDB, { upsert: true });
 
-        const combinedPlaylists = user.created_playlists.concat(user.followed_playlists);
+        const combinedPlaylists = user.created_playlists.concat(user.followed_playlists).sort((a, b) => b.followers_count - a.followers_count);
         // create or update playlists in the database
         const playlistsForDB: PlaylistDB[] = combinedPlaylists.map(playlist => ({
             id: playlist.id,
@@ -154,6 +155,7 @@ export async function fetchFromSpotify(user: User, headers: any) {
 export default async function Page({ searchParams }: DashboardPageProps) {
     const session = await getServerSession(authOptions);
     const { page } = await searchParams;
+    const { limit } = await searchParams;
 
     if (!session) {
         redirect("/");
@@ -174,6 +176,7 @@ export default async function Page({ searchParams }: DashboardPageProps) {
 
     let createdPlaylistsSize: number = 0;
 
+    const limitPerPage: number = limit || useScreenSizeLimits()[0];
     const currentPage: number = page || 1;
     let totalPages: number = 0;
     let playlistsToShow: Playlist[] = [];
@@ -184,11 +187,11 @@ export default async function Page({ searchParams }: DashboardPageProps) {
         if (userFromDB && userFromDB.isLoggedIn) {
             // called whenever user navigates to dashboard after logging in (no need to fetch from Spotify)
             createdPlaylistsSize = userFromDB.created_playlists.length;
-            totalPages = Math.ceil(createdPlaylistsSize / playlistPaginationLimit);
-            const playlistsToQuery = userFromDB.created_playlists.slice((currentPage - 1) * playlistPaginationLimit, currentPage * playlistPaginationLimit);
+            totalPages = Math.ceil(createdPlaylistsSize / limitPerPage);
+            const playlistsToQuery = userFromDB.created_playlists.slice((currentPage - 1) * limitPerPage, currentPage * limitPerPage);
             const userPlaylists = await fetchFromDatabase(user.id, playlistsToQuery);
             if (userPlaylists) {
-                playlistsToShow = userPlaylists.sort((a, b) => b.followers_count - a.followers_count);
+                playlistsToShow = userPlaylists;
             }
             // update user's login status
             await User.updateOne({ id: user.id }, { isLoggedIn: true });
@@ -197,10 +200,9 @@ export default async function Page({ searchParams }: DashboardPageProps) {
             const userPlaylists = await fetchFromSpotify(user, headers);
             createdPlaylistsSize = userPlaylists ? userPlaylists.length : 0;
             if (userPlaylists) {
-                totalPages = Math.ceil(userPlaylists.length / playlistPaginationLimit);
+                totalPages = Math.ceil(userPlaylists.length / limitPerPage);
                 playlistsToShow = userPlaylists
-                    .slice((currentPage - 1) * playlistPaginationLimit, currentPage * playlistPaginationLimit)
-                    .sort((a, b) => b.followers_count - a.followers_count);
+                    .slice((currentPage - 1) * limitPerPage, currentPage * limitPerPage);
             }
         }
     } catch (e) {
@@ -228,14 +230,13 @@ export default async function Page({ searchParams }: DashboardPageProps) {
                     </div>
                     <DashboardRefreshButton user={user} headers={headers} />
                 </div>
-
                 {/* Playlists Section */}
                 <div className="mb-20">
                     <div className="flex justify-center items-center gap-3 mb-8">
                         <Music2 className="h-7 w-7 text-green-500" />
-                        <h2 className="text-2xl font-bold text-white">Your Public Playlists</h2>
+                        <h2 className="text-2xl font-bold text-white text-center">Your Public Playlists</h2>
                     </div>
-
+                    <ItemsPerPageSelector />
                     <div className="w-full max-md:w-[70vw] mx-auto">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {playlistsToShow.map((playlist, index) => (

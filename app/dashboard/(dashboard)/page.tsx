@@ -33,7 +33,6 @@ type UserDB = {
 export type Playlist = {
     id: string;
     owner_id: string;
-    user_created: boolean;
     name: string;
     image: string;
     followers_count: number;
@@ -42,7 +41,6 @@ export type Playlist = {
 type PlaylistDB = {
     id: string;
     owner_id: string;
-    user_created: boolean;
     name: string;
     image: string;
     followers_count: number;
@@ -60,7 +58,6 @@ async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
         const playlist: Playlist = {
             id: playlistFromDB.id,
             owner_id: playlistFromDB.owner_id,
-            user_created: playlistFromDB.owner_id === user_id,
             name: playlistFromDB.name,
             image: playlistFromDB.image,
             followers_count: playlistFromDB.followers_count
@@ -69,6 +66,7 @@ async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
     }
     return playlists;
 }
+
 export async function fetchFromSpotify(user: User, headers: any) {
     console.log("Fetching from SPOTIFY API");
     try {
@@ -77,9 +75,11 @@ export async function fetchFromSpotify(user: User, headers: any) {
         });
 
         const data = await response.json();
+        // only interested in public playlists
         const public_playlists = data.items.filter((playlist: any) => playlist.public);
         const playlist_ids = public_playlists.map((playlist: any) => playlist.id);
 
+        // get more details of each playlist
         const playlistPromises = playlist_ids.map(async (id: string) => {
             const response = await fetch(`https://api.spotify.com/v1/playlists/${id}`, {
                 headers: headers
@@ -89,7 +89,6 @@ export async function fetchFromSpotify(user: User, headers: any) {
             const playlist: Playlist = {
                 id: playlist_data.id,
                 owner_id: playlist_data.owner.id,
-                user_created: playlist_data.owner.id === user.id,
                 name: playlist_data.name,
                 image: playlist_data.images[0]?.url,
                 followers_count: playlist_data.followers.total
@@ -107,49 +106,35 @@ export async function fetchFromSpotify(user: User, headers: any) {
             playlists: [],
             isLoggedIn: true
         }
-        userForDB.playlists = user.playlists.map(playlist => playlist.id);
+        userForDB.playlists = playlist_ids;
         await User.updateOne({ id: user.id }, userForDB, { upsert: true });
 
-        // create or update subscribed playlists in the database
+        // create or update playlists in the database
         const playlistsForDB: PlaylistDB[] = user.playlists.map(playlist => ({
             id: playlist.id,
             owner_id: playlist.owner_id,
-            user_created: playlist.user_created,
             name: playlist.name,
             image: playlist.image,
             followers_count: playlist.followers_count,
             followers: []
         }));
         const insertedPlaylists = playlistsForDB.map(async (playlist) => {
-            if (playlist.user_created) {
-                await Playlist.updateOne(
-                    { id: playlist.id },
-                    {
-                        $set: {
-                            id: playlist.id,
-                            owner_id: playlist.owner_id,
-                            name: playlist.name,
-                            image: playlist.image,
-                            followers_count: playlist.followers_count,
-                        }
+            await Playlist.updateOne(
+                { id: playlist.id },
+                {
+                    $set: {
+                        id: playlist.id,
+                        owner_id: playlist.owner_id,
+                        name: playlist.name,
+                        image: playlist.image,
+                        followers_count: playlist.followers_count,
                     },
-                    { upsert: true }
-                );
-            } else {
-                await Playlist.updateOne(
-                    { id: playlist.id },
-                    {
-                        $addToSet : {followers: user.id },
-                        $setOnInsert: {
-                            id: playlist.id,
-                            owner_id: playlist.owner_id,
-                            name: playlist.name,
-                            image: playlist.image,
-                            followers_count: playlist.followers_count
-                        }
-                    },
-                    { upsert: true });
-            }
+                    ...(playlist.owner_id !== user.id && {
+                        $addToSet: { followers: user.id },
+                    }),
+                },
+                { upsert: true }
+            );
             return user.playlists;
         });
         await Promise.all(insertedPlaylists);
@@ -189,7 +174,7 @@ export default async function Page() {
             const allUserPlaylistIDs: string[] = userFromDB.playlists;
             const userPlaylists = await fetchFromDatabase(user.id, allUserPlaylistIDs);
             if (userPlaylists) {
-                ownedPlaylists = userPlaylists.filter(playlist => playlist.user_created).sort((a, b) => b.followers_count - a.followers_count);
+                ownedPlaylists = userPlaylists.filter(playlist => playlist.owner_id === user.id).sort((a, b) => b.followers_count - a.followers_count);
             }
             // update user's login status
             await User.updateOne({ id: user.id }, { isLoggedIn: true });
@@ -197,7 +182,7 @@ export default async function Page() {
             // called when user logs in for the first time or logs in again after logging out (gets fresh data from Spotify)
             const userPlaylists = await fetchFromSpotify(user, headers);
             if (userPlaylists) {
-                ownedPlaylists = userPlaylists.filter(playlist => playlist.user_created).sort((a, b) => b.followers_count - a.followers_count);
+                ownedPlaylists = userPlaylists.filter(playlist => playlist.owner_id === user.id).sort((a, b) => b.followers_count - a.followers_count);
             }
         }
     } catch (e) {

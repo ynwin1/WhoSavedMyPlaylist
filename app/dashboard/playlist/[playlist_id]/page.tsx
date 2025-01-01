@@ -8,6 +8,7 @@ import PlaylistFollowersTable from "@/app/component/Playlist/PlaylistFollowersTa
 import Link from "next/link";
 import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
 import {ExternalLink} from "lucide-react";
+import {paginationLimit} from "@/app/lib/utils";
 
 interface PlaylistPageProps {
     params:Promise<{playlist_id: string}>,
@@ -72,8 +73,7 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
 
     if (dbPlaylist) {
         const knownFollowersCount = dbPlaylist.followers.length;
-        const entriesPerPage = 10;
-        const totalPages = Math.ceil(knownFollowersCount / entriesPerPage);
+        const totalPages = Math.ceil(knownFollowersCount / paginationLimit);
         return (
             <div className="flex flex-col">
                 <div className="">

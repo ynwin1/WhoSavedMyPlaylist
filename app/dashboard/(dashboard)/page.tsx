@@ -8,13 +8,14 @@ import connectDB from "@/app/lib/mongodb";
 import Link from "next/link";
 import {Music2, PlayCircle} from "lucide-react";
 import {Metadata} from "next";
+import DashboardRefreshButton from "@/app/component/Buttons/DashboardRefreshButton";
 
 export const metadata: Metadata = {
     title: 'Dashboard',
     description: 'Your personal dashboard to see followers on your Spotify playlists.'
 }
 
-type User = {
+export type User = {
     id: string;
     name: string;
     image: string;
@@ -26,6 +27,7 @@ type UserDB = {
     name: string;
     image: string;
     playlists: string[];
+    isLoggedIn: true;
 }
 
 export type Playlist = {
@@ -48,6 +50,7 @@ type PlaylistDB = {
 }
 
 async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
+    console.log("Fetching from database");
     const playlists = [];
     for (const id of allPlaylists) {
         const playlistFromDB = await Playlist.findOne({id: id});
@@ -66,7 +69,8 @@ async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
     }
     return playlists;
 }
-async function fetchFromSpotify(user: User, headers: any) {
+export async function fetchFromSpotify(user: User, headers: any) {
+    console.log("Fetching from SPOTIFY API");
     try {
         const response = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
             headers: headers
@@ -100,7 +104,8 @@ async function fetchFromSpotify(user: User, headers: any) {
             id: user.id,
             name: user.name,
             image: user.image,
-            playlists: []
+            playlists: [],
+            isLoggedIn: true
         }
         userForDB.playlists = user.playlists.map(playlist => playlist.id);
         await User.updateOne({ id: user.id }, userForDB, { upsert: true });
@@ -181,8 +186,7 @@ export default async function Page() {
     try {
         await connectDB();
         const userFromDB = await User.findOne({ id: user.id });
-        if (userFromDB && !userFromDB.isLoggedIn) {
-            console.log("Fetching from database");
+        if (userFromDB && userFromDB.isLoggedIn) {
             const allUserPlaylistIDs: string[] = userFromDB.playlists;
             const userPlaylists = await fetchFromDatabase(user.id, allUserPlaylistIDs);
             if (userPlaylists) {
@@ -191,14 +195,13 @@ export default async function Page() {
             // update user's login status
             await User.updateOne({ id: user.id }, { isLoggedIn: true });
         } else {
-            console.log("Fetching from SPOTIFY API");
             const userPlaylists = await fetchFromSpotify(user, headers);
             if (userPlaylists) {
                 ownedPlaylists = userPlaylists.filter(playlist => playlist.user_created).sort((a, b) => b.followers_count - a.followers_count);
             }
         }
     } catch (e) {
-
+        console.error("Error fetching user playlists:", e);
     }
 
     return (
@@ -220,6 +223,7 @@ export default async function Page() {
                             {`${ownedPlaylists.length} Created Playlists`}
                         </p>
                     </div>
+                    <DashboardRefreshButton user={user} headers={headers} />
                 </div>
 
                 {/* Playlists Section */}

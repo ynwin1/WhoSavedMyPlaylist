@@ -25,14 +25,16 @@ export type User = {
     id: string;
     name: string;
     image: string;
-    playlists: Playlist[];
+    created_playlists: Playlist[];
+    followed_playlists: Playlist[];
 }
 
 type UserDB = {
     id: string;
     name: string;
     image: string;
-    playlists: string[];
+    created_playlists: string[];
+    followed_playlists: string[];
     isLoggedIn: true;
 }
 
@@ -55,21 +57,19 @@ type PlaylistDB = {
 
 async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
     console.log("Fetching from database");
-    const playlists = [];
-    for (const id of allPlaylists) {
-        const playlistFromDB = await Playlist.findOne({id: id});
-        if (!playlistFromDB) {
-            return undefined;
-        }
-        const playlist: Playlist = {
-            id: playlistFromDB.id,
-            owner_id: playlistFromDB.owner_id,
-            name: playlistFromDB.name,
-            image: playlistFromDB.image,
-            followers_count: playlistFromDB.followers_count
-        }
-        playlists.push(playlist);
+    const playlistsFromDB = await Playlist.find({ id: { $in: allPlaylists } });
+
+    if (!playlistsFromDB.length) {
+        return undefined;
     }
+
+    const playlists = playlistsFromDB.map(playlist => ({
+        id: playlist.id,
+        owner_id: playlist.owner_id,
+        name: playlist.name,
+        image: playlist.image,
+        followers_count: playlist.followers_count
+    }));
     return playlists;
 }
 
@@ -101,7 +101,9 @@ export async function fetchFromSpotify(user: User, headers: any) {
             }
             return playlist;
         });
-        user.playlists = await Promise.all(playlistPromises);
+        const allPlaylists = await Promise.all(playlistPromises);
+        user.created_playlists = allPlaylists.filter(playlist => playlist.owner_id === user.id);
+        user.followed_playlists = allPlaylists.filter(playlist => playlist.owner_id !== user.id);
 
         await connectDB();
         // create or update user in the database
@@ -109,14 +111,15 @@ export async function fetchFromSpotify(user: User, headers: any) {
             id: user.id,
             name: user.name,
             image: user.image,
-            playlists: [],
+            created_playlists: user.created_playlists.map(playlist => playlist.id),
+            followed_playlists: user.followed_playlists.map(playlist => playlist.id),
             isLoggedIn: true
         }
-        userForDB.playlists = playlist_ids;
         await User.updateOne({ id: user.id }, userForDB, { upsert: true });
 
+        const combinedPlaylists = user.created_playlists.concat(user.followed_playlists);
         // create or update playlists in the database
-        const playlistsForDB: PlaylistDB[] = user.playlists.map(playlist => ({
+        const playlistsForDB: PlaylistDB[] = combinedPlaylists.map(playlist => ({
             id: playlist.id,
             owner_id: playlist.owner_id,
             name: playlist.name,
@@ -124,10 +127,10 @@ export async function fetchFromSpotify(user: User, headers: any) {
             followers_count: playlist.followers_count,
             followers: []
         }));
-        const insertedPlaylists = playlistsForDB.map(async (playlist) => {
-            await Playlist.updateOne(
-                { id: playlist.id },
-                {
+        const bulkOps = playlistsForDB.map(playlist => ({
+            updateOne: {
+                filter: { id: playlist.id },
+                update: {
                     $set: {
                         id: playlist.id,
                         owner_id: playlist.owner_id,
@@ -135,17 +138,14 @@ export async function fetchFromSpotify(user: User, headers: any) {
                         image: playlist.image,
                         followers_count: playlist.followers_count,
                     },
-                    ...(playlist.owner_id !== user.id && {
-                        $addToSet: { followers: user.id },
-                    }),
+                    ...(playlist.owner_id !== user.id && { $addToSet: { followers: user.id } })
                 },
-                { upsert: true }
-            );
-            return user.playlists;
-        });
-        await Promise.all(insertedPlaylists);
+                upsert: true
+            }
+        }));
+        await Playlist.bulkWrite(bulkOps);
 
-        return user.playlists;
+        return user.created_playlists;
     } catch (e) {
         console.error("Error fetching user playlists:", e);
     }
@@ -163,7 +163,8 @@ export default async function Page({ searchParams }: DashboardPageProps) {
         id: session.user?.id as string,
         name: session.user?.name as string,
         image: session.user?.image as string,
-        playlists: []
+        created_playlists: [],
+        followed_playlists: []
     };
 
     const headers = {
@@ -171,34 +172,40 @@ export default async function Page({ searchParams }: DashboardPageProps) {
         'Content-Type': 'application/json'
     }
 
-    let ownedPlaylists: Playlist[] = [];
+    let createdPlaylistsSize: number = 0;
+
+    const currentPage: number = page || 1;
+    let totalPages: number = 0;
+    let playlistsToShow: Playlist[] = [];
 
     try {
         await connectDB();
         const userFromDB = await User.findOne({ id: user.id });
         if (userFromDB && userFromDB.isLoggedIn) {
             // called whenever user navigates to dashboard after logging in (no need to fetch from Spotify)
-            const allUserPlaylistIDs: string[] = userFromDB.playlists;
-            const userPlaylists = await fetchFromDatabase(user.id, allUserPlaylistIDs);
+            createdPlaylistsSize = userFromDB.created_playlists.length;
+            totalPages = Math.ceil(createdPlaylistsSize / playlistPaginationLimit);
+            const playlistsToQuery = userFromDB.created_playlists.slice((currentPage - 1) * playlistPaginationLimit, currentPage * playlistPaginationLimit);
+            const userPlaylists = await fetchFromDatabase(user.id, playlistsToQuery);
             if (userPlaylists) {
-                ownedPlaylists = userPlaylists.filter(playlist => playlist.owner_id === user.id).sort((a, b) => b.followers_count - a.followers_count);
+                playlistsToShow = userPlaylists.sort((a, b) => b.followers_count - a.followers_count);
             }
             // update user's login status
             await User.updateOne({ id: user.id }, { isLoggedIn: true });
         } else {
             // called when user logs in for the first time or logs in again after logging out (gets fresh data from Spotify)
             const userPlaylists = await fetchFromSpotify(user, headers);
+            createdPlaylistsSize = userPlaylists ? userPlaylists.length : 0;
             if (userPlaylists) {
-                ownedPlaylists = userPlaylists.filter(playlist => playlist.owner_id === user.id).sort((a, b) => b.followers_count - a.followers_count);
+                totalPages = Math.ceil(userPlaylists.length / playlistPaginationLimit);
+                playlistsToShow = userPlaylists
+                    .slice((currentPage - 1) * playlistPaginationLimit, currentPage * playlistPaginationLimit)
+                    .sort((a, b) => b.followers_count - a.followers_count);
             }
         }
     } catch (e) {
         console.error("Error fetching user playlists:", e);
     }
-
-    const totalPages = Math.ceil(ownedPlaylists.length / playlistPaginationLimit);
-    const currentPage = page || 1;
-    const playlistsToShow = ownedPlaylists.slice((currentPage - 1) * playlistPaginationLimit, currentPage * playlistPaginationLimit);
 
     return (
         <div className="min-h-screen bg-black">
@@ -216,7 +223,7 @@ export default async function Page({ searchParams }: DashboardPageProps) {
                     </h1>
                     <div className="bg-white/10 px-6 py-2 rounded-full mt-4 border-2 border-spotify">
                         <p className="text-white/90">
-                            {`${ownedPlaylists.length} Created Playlists`}
+                            {`${createdPlaylistsSize} Created Playlists`}
                         </p>
                     </div>
                     <DashboardRefreshButton user={user} headers={headers} />
@@ -248,7 +255,7 @@ export default async function Page({ searchParams }: DashboardPageProps) {
                         </div>
 
                         {/* When empty */}
-                        {ownedPlaylists.length === 0 && (
+                        {createdPlaylistsSize === 0 && (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
                                 <PlayCircle className="h-16 w-16 text-green-500 mb-4" />
                                 <h3 className="text-xl font-semibold text-white mb-2">

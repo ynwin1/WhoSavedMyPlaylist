@@ -5,6 +5,12 @@ import FeatureCard from '@/app/component/Home/FeatureCard';
 import {getServerSession} from "next-auth/next";
 import {authOptions} from "@/app/api/auth/[...nextauth]/route";
 import DashboardButton from "@/app/component/Buttons/DashboardButton";
+import {Metadata} from "next";
+
+export const metadata: Metadata = {
+    title: 'Home | WhoSavedMyPlaylist',
+    description: 'Discover who saved your Spotify playlists.'
+}
 
 export default async function Page() {
     const session = await getServerSession(authOptions);

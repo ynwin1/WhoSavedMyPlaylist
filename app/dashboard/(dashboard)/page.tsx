@@ -181,12 +181,11 @@ export default async function Page() {
 
     let ownedPlaylists: Playlist[] = [];
 
-    // if user is not in the database, fetch data from Spotify API
-    // otherwise, fetch data from the database
     try {
         await connectDB();
         const userFromDB = await User.findOne({ id: user.id });
         if (userFromDB && userFromDB.isLoggedIn) {
+            // called whenever user navigates to dashboard after logging in (no need to fetch from Spotify)
             const allUserPlaylistIDs: string[] = userFromDB.playlists;
             const userPlaylists = await fetchFromDatabase(user.id, allUserPlaylistIDs);
             if (userPlaylists) {
@@ -195,6 +194,7 @@ export default async function Page() {
             // update user's login status
             await User.updateOne({ id: user.id }, { isLoggedIn: true });
         } else {
+            // called when user logs in for the first time or logs in again after logging out (gets fresh data from Spotify)
             const userPlaylists = await fetchFromSpotify(user, headers);
             if (userPlaylists) {
                 ownedPlaylists = userPlaylists.filter(playlist => playlist.user_created).sort((a, b) => b.followers_count - a.followers_count);

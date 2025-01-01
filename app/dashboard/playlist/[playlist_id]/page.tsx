@@ -23,7 +23,6 @@ export type Follower = {
 const Page = async ({params, searchParams}: PlaylistPageProps) => {
     const {playlist_id} = await params;
     const {page} = await searchParams;
-    console.log(playlist_id);
 
     let dbPlaylist = null;
     let spotifyFollowersCount = 0;

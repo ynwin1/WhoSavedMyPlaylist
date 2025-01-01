@@ -115,7 +115,6 @@ async function fetchFromSpotify(user: User, headers: any) {
             followers_count: playlist.followers_count,
             followers: []
         }));
-        console.log("Number of playlists to update:", playlistsForDB.length);
         const insertedPlaylists = playlistsForDB.map(async (playlist) => {
             if (playlist.user_created) {
                 await Playlist.updateOne(
@@ -183,6 +182,7 @@ export default async function Page() {
         await connectDB();
         const userFromDB = await User.findOne({ id: user.id });
         if (userFromDB && !userFromDB.isLoggedIn) {
+            console.log("Fetching from database");
             const allUserPlaylistIDs: string[] = userFromDB.playlists;
             const userPlaylists = await fetchFromDatabase(user.id, allUserPlaylistIDs);
             if (userPlaylists) {
@@ -191,6 +191,7 @@ export default async function Page() {
             // update user's login status
             await User.updateOne({ id: user.id }, { isLoggedIn: true });
         } else {
+            console.log("Fetching from SPOTIFY API");
             const userPlaylists = await fetchFromSpotify(user, headers);
             if (userPlaylists) {
                 ownedPlaylists = userPlaylists.filter(playlist => playlist.user_created).sort((a, b) => b.followers_count - a.followers_count);

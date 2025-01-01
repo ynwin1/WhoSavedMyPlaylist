@@ -3,16 +3,16 @@ import React from 'react'
 import {signOut} from "next-auth/react";
 
 async function onSignOut(user_id: string) {
-    // const response = await fetch(`/api/user/${user_id}/signout`, {
-    //     method: "PUT",
-    //     headers: {
-    //         "Content-Type": "application/json"
-    //     }
-    // });
-    // if (!response.ok) {
-    //     const error = await response.json();
-    //     throw new Error(error.message || "Failed to sign out");
-    // }
+    const response = await fetch(`/api/user/${user_id}/signout`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to sign out");
+    }
 
     await signOut({callbackUrl: "/"});
 }

@@ -13,7 +13,7 @@ const UserSchema: Schema<IUser> = new Schema({
     name: { type: String, required: true },
     image: { type: String, required: true },
     playlists: { type: [String], required: true },
-    isLoggedIn: { type: Boolean, required: true, default: false },
+    isLoggedIn: { type: Boolean, required: true, default: true },
 });
 
 const User: Model<IUser> = models.User || mongoose.model("User", UserSchema);

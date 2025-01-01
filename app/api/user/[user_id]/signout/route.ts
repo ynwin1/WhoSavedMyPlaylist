@@ -2,15 +2,18 @@ import connectDB from "@/app/lib/mongodb";
 import {NextRequest, NextResponse} from "next/server";
 import User from "@/app/model/User";
 
+type Props = {
+    params: Promise<{ user_id: string }>;
+}
+
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { userId: string } }
+    props: Props
 ) {
     try {
         await connectDB();
-
-        const userId = params.userId;
-        if (!userId) {
+        const {user_id} = await props.params;
+        if (!user_id) {
             return NextResponse.json(
                 { error: "User ID is required" },
                 { status: 400 }
@@ -18,7 +21,7 @@ export async function PUT(
         }
 
         const user = await User.findOneAndUpdate(
-            { id: userId },
+            { id: user_id },
             { $set: { isLoggedIn: false } },
             { new: true }
         );

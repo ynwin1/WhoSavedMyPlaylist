@@ -8,6 +8,7 @@ import PlaylistFollowersTable from "@/app/component/Playlist/PlaylistFollowersTa
 import Link from "next/link";
 import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
 import {ExternalLink} from "lucide-react";
+import {paginationLimit} from "@/app/lib/utils";
 
 interface PlaylistPageProps {
     params:Promise<{playlist_id: string}>,
@@ -23,7 +24,6 @@ export type Follower = {
 const Page = async ({params, searchParams}: PlaylistPageProps) => {
     const {playlist_id} = await params;
     const {page} = await searchParams;
-    console.log(playlist_id);
 
     let dbPlaylist = null;
     let spotifyFollowersCount = 0;
@@ -73,11 +73,10 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
 
     if (dbPlaylist) {
         const knownFollowersCount = dbPlaylist.followers.length;
-        const entriesPerPage = 10;
-        const totalPages = Math.ceil(knownFollowersCount / entriesPerPage);
+        const totalPages = Math.ceil(knownFollowersCount / paginationLimit);
         return (
             <div className="flex flex-col">
-                <div className="relative">
+                <div className="">
                     <div className="bg-spotify w-full h-[20vh] max-lg:h-[10vh] max-xl:h-[15vh] z-0"/>
                     <Image
                         src={dbPlaylist.image}
@@ -86,15 +85,16 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
                         height={200}
                         className="absolute left-20 max-md:left-10 transform -translate-y-1/2 rounded-full border-4 border-white max-md:w-[8rem] max-md:h-[8rem] max-lg:w-[10rem] max-lg:h-[10rem]"
                     />
-                    <div className="flex flex-col gap-6 text-center mt-10 z-10 max-lg:mt-24">
-                        <h1 className="text-3xl font-bold text-spotify hover:text-green-800 transition-opacity duration-100">
-                            <Link href={`https://open.spotify.com/playlist/${playlist_id}`} target="_blank">
-                                <div className="flex items-center justify-center">
-                                    {dbPlaylist.name}
-                                    <ExternalLink className="h-6 w-6 inline-block justify-center ml-6"/>
-                                </div>
-                            </Link>
+                    <div className="flex flex-col gap-6 text-center mt-10 z-10 max-md:mt-24">
+                        <h1 className="text-3xl font-bold text-spotify">
+                            <div className="flex flex-row items-center justify-center gap-4">
+                                <span>{dbPlaylist.name}</span>
+                                <Link href={`https://open.spotify.com/playlist/${playlist_id}`} target="_blank">
+                                    <ExternalLink className="h-8 w-8 justify-center hover:text-green-800 transition-opacity duration-100 -mt-1"/>
+                                </Link>
+                            </div>
                         </h1>
+
 
                         <h2 className="text-xl font-semibold text-white max-lg:text-base">
                             {knownFollowersCount === 0 ?

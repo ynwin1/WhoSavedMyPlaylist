@@ -6,6 +6,7 @@ import Playlist from "@/app/model/Playlist";
 import Image from "next/image";
 import PlaylistFollowersTable from "@/app/component/Playlist/PlaylistFollowersTable";
 import Link from "next/link";
+import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
 
 interface PlaylistPageProps {
     params:Promise<{playlist_id: string}>;
@@ -69,16 +70,18 @@ const Page = async ({params}: PlaylistPageProps) => {
 
     if (dbPlaylist) {
         const knownFollowersCount = dbPlaylist.followers.length;
+        const entriesPerPage = 10;
+        const totalPages = Math.ceil(knownFollowersCount / entriesPerPage);
         return (
             <div className="flex flex-col">
                 <div className="relative">
-                    <div className="bg-spotify w-full h-[20vh] max-lg:h-[10vh] z-0"/>
+                    <div className="bg-spotify w-full h-[20vh] max-lg:h-[10vh] max-xl:h-[15vh] z-0"/>
                     <Image
                         src={dbPlaylist.image}
                         alt={dbPlaylist.name}
                         width={200}
                         height={200}
-                        className="absolute left-20 max-md:left-10 transform -translate-y-1/2 rounded-full border-4 border-white max-md:w-[8rem] max-md:h-[8rem]"
+                        className="absolute left-20 max-md:left-10 transform -translate-y-1/2 rounded-full border-4 border-white max-md:w-[8rem] max-md:h-[8rem] max-lg:w-[10rem] max-lg:h-[10rem]"
                     />
                     <div className="flex flex-col gap-6 text-center mt-10 z-10 max-lg:mt-24">
                         <h1 className="text-3xl font-bold text-white hover:text-gray-300">
@@ -91,20 +94,17 @@ const Page = async ({params}: PlaylistPageProps) => {
                             {knownFollowersCount === 0 ?
                                 "We do not know any followers of this playlist yet"
                                 :
-                                `Out of ${spotifyFollowersCount} followers, ${knownFollowersCount} follower(s) are on this platform`
+                                `Out of ${spotifyFollowersCount} followers, 
+                                ${knownFollowersCount === 1 ? `${knownFollowersCount} follower is ` : `${knownFollowersCount} followers are ` } 
+                                on this platform`
                             }
                         </h2>
                     </div>
                     <PlaylistFollowersTable followers={knownFollowers} />
+                    <FollowersPagination totalPages={totalPages} />
                 </div>
             </div>
         )
     }
-
-    return (
-        <div>
-            Followers of this playlist are not on this platform yet.
-        </div>
-    )
 }
 export default Page

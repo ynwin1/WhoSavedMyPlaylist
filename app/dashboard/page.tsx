@@ -175,7 +175,7 @@ export default async function Page() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {ownedPlaylists.map((playlist, index) => (
                                 <Link
-                                    href={`/dashboard/playlist/${playlist.id}`}
+                                    href={`/dashboard/playlist/${playlist.id}?page=1`}
                                     key={index}
                                     className="transform transition-all duration-300 hover:-translate-y-1"
                                 >

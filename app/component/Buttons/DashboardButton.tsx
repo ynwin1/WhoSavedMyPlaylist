@@ -13,7 +13,7 @@ const DashboardButton = () => {
                  border-2 border-white
                  "
         >
-            Dashboard
+            Go to Dashboard
         </button>
     )
 }

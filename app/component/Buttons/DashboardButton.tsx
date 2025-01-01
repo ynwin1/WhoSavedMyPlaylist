@@ -5,7 +5,7 @@ import {redirect} from "next/navigation";
 const DashboardButton = () => {
     return (
         <button
-            onClick={() => redirect("/dashboard")}
+            onClick={() => redirect("/dashboard?page=1")}
             className="
             px-4 py-2 rounded-full bg-green-500 hover:bg-green-400 text-white hover:text-black font-medium
                  transform transition-all duration-300 hover:scale-105

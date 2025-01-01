@@ -9,10 +9,16 @@ import Link from "next/link";
 import {Music2, PlayCircle} from "lucide-react";
 import {Metadata} from "next";
 import DashboardRefreshButton from "@/app/component/Buttons/DashboardRefreshButton";
+import {playlistPaginationLimit} from "@/app/lib/utils";
+import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
 
 export const metadata: Metadata = {
     title: 'Dashboard',
     description: 'Your personal dashboard to see followers on your Spotify playlists.'
+}
+
+type DashboardPageProps = {
+    searchParams: Promise<{page?: number}>;
 }
 
 export type User = {
@@ -145,8 +151,9 @@ export async function fetchFromSpotify(user: User, headers: any) {
     }
 }
 
-export default async function Page() {
+export default async function Page({ searchParams }: DashboardPageProps) {
     const session = await getServerSession(authOptions);
+    const { page } = await searchParams;
 
     if (!session) {
         redirect("/");
@@ -189,6 +196,10 @@ export default async function Page() {
         console.error("Error fetching user playlists:", e);
     }
 
+    const totalPages = Math.ceil(ownedPlaylists.length / playlistPaginationLimit);
+    const currentPage = page || 1;
+    const playlistsToShow = ownedPlaylists.slice((currentPage - 1) * playlistPaginationLimit, currentPage * playlistPaginationLimit);
+
     return (
         <div className="min-h-screen bg-black">
             <div className="bg-spotify h-[15vh] xl:h-[20vh] w-full" />
@@ -220,7 +231,7 @@ export default async function Page() {
 
                     <div className="w-full max-md:w-[70vw] mx-auto">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {ownedPlaylists.map((playlist, index) => (
+                            {playlistsToShow.map((playlist, index) => (
                                 <Link
                                     href={`/dashboard/playlist/${playlist.id}?page=1`}
                                     key={index}
@@ -248,6 +259,8 @@ export default async function Page() {
                                 </p>
                             </div>
                         )}
+
+                        <FollowersPagination totalPages={totalPages} />
                     </div>
                 </div>
             </div>

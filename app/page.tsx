@@ -35,7 +35,7 @@ export default async function Page() {
                     <FeatureCard
                         icon={<Users className="h-8 w-8 text-green-500" />}
                         title="See Your Followers"
-                        description="See who saved your playlists and connect with your music community."
+                        description="Find out who saved your playlists and connect with fellow music lovers."
                     />
                     <FeatureCard
                         icon={<Lock className="h-8 w-8 text-green-500" />}

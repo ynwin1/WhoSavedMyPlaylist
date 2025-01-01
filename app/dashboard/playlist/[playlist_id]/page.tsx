@@ -7,9 +7,11 @@ import Image from "next/image";
 import PlaylistFollowersTable from "@/app/component/Playlist/PlaylistFollowersTable";
 import Link from "next/link";
 import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
+import {ExternalLink} from "lucide-react";
 
 interface PlaylistPageProps {
-    params:Promise<{playlist_id: string}>;
+    params:Promise<{playlist_id: string}>,
+    searchParams:Promise<{page: number}>,
 }
 
 export type Follower = {
@@ -18,8 +20,9 @@ export type Follower = {
     image: string;
 }
 
-const Page = async ({params}: PlaylistPageProps) => {
+const Page = async ({params, searchParams}: PlaylistPageProps) => {
     const {playlist_id} = await params;
+    const {page} = await searchParams;
     console.log(playlist_id);
 
     let dbPlaylist = null;
@@ -84,9 +87,12 @@ const Page = async ({params}: PlaylistPageProps) => {
                         className="absolute left-20 max-md:left-10 transform -translate-y-1/2 rounded-full border-4 border-white max-md:w-[8rem] max-md:h-[8rem] max-lg:w-[10rem] max-lg:h-[10rem]"
                     />
                     <div className="flex flex-col gap-6 text-center mt-10 z-10 max-lg:mt-24">
-                        <h1 className="text-3xl font-bold text-white hover:text-gray-300">
+                        <h1 className="text-3xl font-bold text-spotify hover:text-green-800 transition-opacity duration-100">
                             <Link href={`https://open.spotify.com/playlist/${playlist_id}`} target="_blank">
-                                {dbPlaylist.name}
+                                <div className="flex items-center justify-center">
+                                    {dbPlaylist.name}
+                                    <ExternalLink className="h-6 w-6 inline-block justify-center ml-6"/>
+                                </div>
                             </Link>
                         </h1>
 
@@ -100,7 +106,7 @@ const Page = async ({params}: PlaylistPageProps) => {
                             }
                         </h2>
                     </div>
-                    <PlaylistFollowersTable followers={knownFollowers} />
+                    <PlaylistFollowersTable followers={knownFollowers} currentPage={page}/>
                     <FollowersPagination totalPages={totalPages} />
                 </div>
             </div>

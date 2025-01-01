@@ -1,4 +1,4 @@
-
+export const paginationLimit = 10;
 export const generateFollowersPagination = (currentPage: number, totalPages: number) => {
     if (totalPages <= 5) {
         return Array.from({ length: totalPages }, (_, i) => i + 1);

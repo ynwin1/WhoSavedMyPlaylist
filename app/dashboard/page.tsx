@@ -142,12 +142,9 @@ export default async function Page() {
 
     return (
         <div className="min-h-screen bg-black">
-            {/* Header Section with fixed height */}
             <div className="bg-spotify h-[15vh] xl:h-[20vh] w-full" />
 
-            {/* Main Content */}
             <div className="max-w-[1400px] mx-auto px-6 relative">
-                {/* Profile Section - Overlapping with header */}
                 <div className="flex flex-col items-center -mt-16 mb-12">
                     <img
                         src={session.user?.image || ''}
@@ -189,7 +186,7 @@ export default async function Page() {
                             ))}
                         </div>
 
-                        {/* Empty State */}
+                        {/* When empty */}
                         {ownedPlaylists.length === 0 && (
                             <div className="flex flex-col items-center justify-center py-12 text-center">
                                 <PlayCircle className="h-16 w-16 text-green-500 mb-4" />

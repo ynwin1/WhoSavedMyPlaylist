@@ -2,8 +2,11 @@ import React from 'react';
 import {Follower} from "@/app/dashboard/playlist/[playlist_id]/page";
 import Link from "next/link";
 import { ExternalLink, Users } from 'lucide-react';
+import {paginationLimit} from "@/app/lib/utils";
 
-const PlaylistFollowersTable = ({ followers }: { followers: Follower[] }) => {
+const PlaylistFollowersTable = ({ followers, currentPage }: { followers: Follower[], currentPage: number }) => {
+    const followersToShow = followers.slice((currentPage - 1) * paginationLimit, currentPage * paginationLimit);
+
     return (
         <div className="flex flex-col items-center justify-center px-4 mt-20">
             <div className="flex items-center gap-3 mb-6">
@@ -24,7 +27,7 @@ const PlaylistFollowersTable = ({ followers }: { followers: Follower[] }) => {
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-white/10">
-                        {followers.map((follower, index) => (
+                        {followersToShow.map((follower, index) => (
                             <tr
                                 key={index}
                                 className="group hover:bg-white/5 transition-colors duration-200"

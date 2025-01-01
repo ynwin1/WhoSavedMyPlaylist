@@ -92,7 +92,8 @@ async function fetchData({user, headers}: {user: User, headers: any}) {
             followers_count: playlist.followers_count,
             followers: []
         }));
-        for (const playlist of playlistsForDB) {
+        console.log("Number of playlists to update:", playlistsForDB.length);
+        const insertedPlaylists = playlistsForDB.map(async (playlist) => {
             if (playlist.user_created) {
                 await Playlist.updateOne(
                     { id: playlist.id },
@@ -121,7 +122,10 @@ async function fetchData({user, headers}: {user: User, headers: any}) {
                     { upsert: true });
             }
             return user.playlists;
-        }
+        });
+        await Promise.all(insertedPlaylists);
+
+        return user.playlists;
     } catch (e) {
         console.error("Error fetching user playlists:", e);
     }

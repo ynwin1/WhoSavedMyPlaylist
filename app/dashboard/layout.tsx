@@ -1,4 +1,12 @@
 import NavBar from "@/app/component/NavBar/NavBar";
+import {Metadata} from "next";
+
+export const metadata: Metadata = {
+    title: {
+        template: "%s | WhoSavedMyPlaylist",
+        default: "WhoSavedMyPlaylist",
+    },
+}
 
 export default function DashboardLayout({
                                        children,

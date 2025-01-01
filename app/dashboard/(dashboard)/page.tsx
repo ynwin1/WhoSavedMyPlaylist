@@ -7,6 +7,12 @@ import PlaylistCard from "@/app/component/Playlist/PlaylistCard";
 import connectDB from "@/app/lib/mongodb";
 import Link from "next/link";
 import {Music2, PlayCircle} from "lucide-react";
+import {Metadata} from "next";
+
+export const metadata: Metadata = {
+    title: 'Dashboard',
+    description: 'Your personal dashboard to see followers on your Spotify playlists.'
+}
 
 type User = {
     id: string;
@@ -39,27 +45,7 @@ type PlaylistDB = {
     followers: string[];
 }
 
-export default async function Page() {
-    const session = await getServerSession(authOptions);
-
-    if (!session) {
-        redirect("/");
-    }
-
-    const user: User = {
-        id: session.user?.id as string,
-        name: session.user?.name as string,
-        image: session.user?.image as string,
-        playlists: []
-    };
-
-    const headers = {
-        'Authorization': `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json'
-    }
-
-    let ownedPlaylists: Playlist[] = [];
-
+async function fetchData({user, headers}: {user: User, headers: any}) {
     try {
         const response = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
             headers: headers
@@ -85,7 +71,6 @@ export default async function Page() {
             return playlist;
         });
         user.playlists = await Promise.all(playlistPromises);
-        ownedPlaylists = user.playlists.filter(playlist => playlist.user_created).sort((a, b) => b.followers_count - a.followers_count);
 
         await connectDB();
         // create or update user in the database
@@ -135,9 +120,36 @@ export default async function Page() {
                     },
                     { upsert: true });
             }
+            return user.playlists;
         }
     } catch (e) {
         console.error("Error fetching user playlists:", e);
+    }
+}
+
+export default async function Page() {
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+        redirect("/");
+    }
+
+    const user: User = {
+        id: session.user?.id as string,
+        name: session.user?.name as string,
+        image: session.user?.image as string,
+        playlists: []
+    };
+
+    const headers = {
+        'Authorization': `Bearer ${session.accessToken}`,
+        'Content-Type': 'application/json'
+    }
+
+    let ownedPlaylists: Playlist[] = [];
+    const userPlaylists = await fetchData({user, headers});
+    if (userPlaylists) {
+        ownedPlaylists = userPlaylists.filter(playlist => playlist.user_created).sort((a, b) => b.followers_count - a.followers_count);
     }
 
     return (
@@ -165,7 +177,7 @@ export default async function Page() {
                 <div className="mb-20">
                     <div className="flex justify-center items-center gap-3 mb-8">
                         <Music2 className="h-7 w-7 text-green-500" />
-                        <h2 className="text-2xl font-bold text-white">Your Playlists</h2>
+                        <h2 className="text-2xl font-bold text-white">Your Public Playlists</h2>
                     </div>
 
                     <div className="w-full max-md:w-[70vw] mx-auto">

@@ -10,16 +10,11 @@ import FollowersPagination from "@/app/component/Pagination/FollowersPagination"
 import {ExternalLink} from "lucide-react";
 import {followersLimit} from "@/app/lib/utils";
 import BackToDashboardButton from "@/app/component/Buttons/BackToDashboardButton";
+import {Follower} from "@/app/lib/data_types";
 
 interface PlaylistPageProps {
     params:Promise<{playlist_id: string}>,
     searchParams:Promise<{page?: number, limit?: number}>,
-}
-
-export type Follower = {
-    id: string;
-    name: string;
-    image: string;
 }
 
 const Page = async ({params, searchParams}: PlaylistPageProps) => {

@@ -1,6 +1,6 @@
 "use client"
 import React from 'react'
-import {User} from "@/app/dashboard/(dashboard)/page";
+import {User} from "@/app/lib/data_types";
 import {refreshDashboard} from "@/app/lib/actions";
 
 const DashboardRefreshButton = ({user, headers} : {user: User, headers: any}) => {

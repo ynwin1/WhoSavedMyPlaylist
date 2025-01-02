@@ -35,7 +35,7 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
 
     try {
         const session = await getServerSession(authOptions);
-        dbPlaylist = await Playlist.findOne({id: playlist_id});
+        dbPlaylist = await Playlist.findOne({id: playlist_id}).lean();
         if (!session) {
             redirect("/");
         }

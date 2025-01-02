@@ -63,17 +63,18 @@ const PlaylistCache = new NodeCache({
 })
 
 async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
-    const playlistsFromDB = await Playlist.find({ id: { $in: allPlaylists } });
-    if (!playlistsFromDB.length) {
-        return undefined;
-    }
-
     const cacheKey = `user:${user_id}_${allPlaylists.sort().join("_")}`;
     const cachedPlaylists: Playlist[] | undefined = PlaylistCache.get<Playlist[]>(cacheKey);
 
     if (cachedPlaylists) {
         console.log("Returning from cache");
         return cachedPlaylists;
+    }
+
+    console.log("Fetching from database");
+    const playlistsFromDB = await Playlist.find({ id: { $in: allPlaylists } }).lean();
+    if (!playlistsFromDB.length) {
+        return undefined;
     }
 
     const playlists: Playlist[] = playlistsFromDB.map(playlist => ({
@@ -84,7 +85,6 @@ async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
         followers_count: playlist.followers_count
     }));
 
-    console.log("Fetching from database");
     PlaylistCache.set(cacheKey, playlists);
     return playlists;
 }
@@ -198,7 +198,7 @@ export default async function Page({ searchParams }: DashboardPageProps) {
 
     try {
         await connectDB();
-        const userFromDB = await User.findOne({ id: user.id });
+        const userFromDB = await User.findOne({ id: user.id }).lean();
         if (userFromDB && userFromDB.isLoggedIn) {
             // called whenever user navigates to dashboard after logging in (no need to fetch from Spotify)
             createdPlaylistsSize = userFromDB.created_playlists.length;

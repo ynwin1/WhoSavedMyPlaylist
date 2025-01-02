@@ -14,7 +14,7 @@ export const metadata: Metadata = {
         title: 'WhoSavedMyPlaylist',
         description: 'Find out who saved your Spotify playlists.',
         images: [{
-            url: '/home.png',
+            url: 'https://i.imgur.com/r1J31qh.png',
             width: 800,
             height: 600,
             alt: 'WhoSavedMyPlaylist',

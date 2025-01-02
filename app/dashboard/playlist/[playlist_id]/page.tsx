@@ -8,11 +8,12 @@ import PlaylistFollowersTable from "@/app/component/Playlist/PlaylistFollowersTa
 import Link from "next/link";
 import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
 import {ExternalLink} from "lucide-react";
-import {paginationLimit} from "@/app/lib/utils";
+import {followersLimit} from "@/app/lib/utils";
+import BackToDashboardButton from "@/app/component/Buttons/BackToDashboardButton";
 
 interface PlaylistPageProps {
     params:Promise<{playlist_id: string}>,
-    searchParams:Promise<{page: number}>,
+    searchParams:Promise<{page?: number, limit?: number}>,
 }
 
 export type Follower = {
@@ -23,7 +24,10 @@ export type Follower = {
 
 const Page = async ({params, searchParams}: PlaylistPageProps) => {
     const {playlist_id} = await params;
-    const {page} = await searchParams;
+    let {page, limit} = await searchParams;
+
+    page = page || 1;
+    limit = limit || followersLimit[0];
 
     let dbPlaylist = null;
     let spotifyFollowersCount = 0;
@@ -32,7 +36,6 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
     try {
         const session = await getServerSession(authOptions);
         dbPlaylist = await Playlist.findOne({id: playlist_id});
-
         if (!session) {
             redirect("/");
         }
@@ -49,7 +52,8 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
         spotifyFollowersCount = spotifyPlaylistData.followers.total;
 
         if (dbPlaylist) {
-            const knownFollowerIDs: string[] = dbPlaylist.followers;
+            // splice mutates the original array while slice don't
+            const knownFollowerIDs: string[] = dbPlaylist.followers.slice((page - 1) * limit, limit);
             const knownFollowersPromises = knownFollowerIDs.map(async (id: string) => {
                 const response = await fetch(`https://api.spotify.com/v1/users/${id}`, {
                     headers: headers
@@ -73,11 +77,11 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
 
     if (dbPlaylist) {
         const knownFollowersCount = dbPlaylist.followers.length;
-        const totalPages = Math.ceil(knownFollowersCount / paginationLimit);
+        const totalPages = Math.ceil(knownFollowersCount / limit);
         return (
             <div className="flex flex-col">
-                <div className="">
-                    <div className="bg-spotify w-full h-[20vh] max-lg:h-[10vh] max-xl:h-[15vh] z-0"/>
+                <div>
+                    <div className="bg-spotify w-full h-[20vh] max-lg:h-[12vh] max-xl:h-[15vh] z-0"/>
                     <Image
                         src={dbPlaylist.image}
                         alt={dbPlaylist.name}
@@ -85,18 +89,18 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
                         height={200}
                         className="absolute left-20 max-md:left-10 transform -translate-y-1/2 rounded-full border-4 border-white max-md:w-[8rem] max-md:h-[8rem] max-lg:w-[10rem] max-lg:h-[10rem]"
                     />
-                    <div className="flex flex-col gap-6 text-center mt-10 z-10 max-md:mt-24">
-                        <h1 className="text-3xl font-bold text-spotify">
-                            <div className="flex flex-row items-center justify-center gap-4">
+                    <div className="flex flex-col gap-6 text-center mt-12 z-10 max-md:mt-24">
+                        <h1 className="text-3xl max-sm:text-xl font-bold text-spotify">
+                            <div className="flex flex-row max-sm:flex-col items-center justify-center gap-4">
                                 <span>{dbPlaylist.name}</span>
                                 <Link href={`https://open.spotify.com/playlist/${playlist_id}`} target="_blank">
-                                    <ExternalLink className="h-8 w-8 justify-center hover:text-green-800 transition-opacity duration-100 -mt-1"/>
+                                    <ExternalLink className="h-8 w-8 max-sm:h-6 max-sm:w-6 justify-center hover:text-green-800 transition-opacity duration-100 -mt-1"/>
                                 </Link>
                             </div>
                         </h1>
 
 
-                        <h2 className="text-xl font-semibold text-white max-lg:text-base">
+                        <h2 className="text-xl text-center font-semibold text-white max-lg:text-base">
                             {knownFollowersCount === 0 ?
                                 "We do not know any followers of this playlist yet"
                                 :
@@ -105,6 +109,7 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
                                 on this platform`
                             }
                         </h2>
+                        <BackToDashboardButton />
                     </div>
                     <PlaylistFollowersTable followers={knownFollowers} currentPage={page}/>
                     <FollowersPagination totalPages={totalPages} />

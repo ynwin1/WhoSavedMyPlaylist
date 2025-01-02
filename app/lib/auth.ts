@@ -99,16 +99,27 @@ export const authOptions: AuthOptions = {
     ],
     secret: process.env.NEXTAUTH_SECRET as string,
     cookies: {
+        pkceCodeVerifier: {
+            name: 'next-auth.pkce.code_verifier',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: true  // Always true for Render
+            }
+        },
         state: {
             name: 'next-auth.state',
             options: {
                 httpOnly: true,
                 sameSite: 'lax',
                 path: '/',
-                secure: process.env.NODE_ENV === 'production'
+                secure: true,  // Always true for Render
+                maxAge: 900
             }
         }
     },
+    useSecureCookies: true,
     callbacks: {
         async jwt({ token, user, account }) {
             if (account && user) {
@@ -146,6 +157,4 @@ export const authOptions: AuthOptions = {
             };
         },
     },
-    useSecureCookies: process.env.NODE_ENV === 'production',
-    debug: process.env.NODE_ENV === 'development',
 }

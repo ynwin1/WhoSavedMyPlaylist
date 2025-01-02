@@ -1,6 +1,6 @@
 import React from 'react';
 import SignInButton from '@/app/component/Buttons/SignInButton';
-import { Users, Lock, PersonStanding } from 'lucide-react';
+import {Users, Lock, PersonStanding, HandHeart} from 'lucide-react';
 import FeatureCard from '@/app/component/Home/FeatureCard';
 import {getServerSession} from "next-auth/next";
 import {authOptions} from "@/app/api/auth/[...nextauth]/route";
@@ -9,7 +9,19 @@ import {Metadata} from "next";
 
 export const metadata: Metadata = {
     title: 'Home | WhoSavedMyPlaylist',
-    description: 'Discover who saved your Spotify playlists.'
+    description: 'Find out who saved your Spotify playlists.',
+    openGraph: {
+        title: 'WhoSavedMyPlaylist',
+        description: 'Find out who saved your Spotify playlists.',
+        images: [{
+            url: '/home.png',
+            width: 800,
+            height: 600,
+            alt: 'WhoSavedMyPlaylist',
+        }],
+        type: 'website',
+        siteName: 'WhoSavedMyPlaylist'
+    }
 }
 
 export default async function Page() {
@@ -37,7 +49,7 @@ export default async function Page() {
             </div>
 
             <div className="max-w-6xl mx-auto px-4 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <FeatureCard
                         icon={<Users className="h-8 w-8 text-green-500" />}
                         title="See Your Followers"
@@ -46,7 +58,12 @@ export default async function Page() {
                     <FeatureCard
                         icon={<PersonStanding className="h-8 w-8 text-green-500" />}
                         title="The 'You' Perspective"
-                        description="Only you can see who subscribed to your playlists. No one else."
+                        description="Only you can see who saved your playlists. No one else."
+                    />
+                    <FeatureCard
+                        icon={<HandHeart className="h-8 w-8 text-green-500" />}
+                        title="Give & Take"
+                        description="You get to see who saved your playlists and others get to see who saved theirs."
                     />
                     <FeatureCard
                         icon={<Lock className="h-8 w-8 text-green-500" />}

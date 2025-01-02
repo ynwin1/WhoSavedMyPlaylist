@@ -63,7 +63,7 @@ export default async function Page() {
                     <FeatureCard
                         icon={<HandHeart className="h-8 w-8 text-green-500" />}
                         title="Give & Take"
-                        description="You get to see who saved your playlists and others get to see who saved theirs."
+                        description="You get to see who saved your playlists and others get to see you saved theirs."
                     />
                     <FeatureCard
                         icon={<Lock className="h-8 w-8 text-green-500" />}

@@ -63,7 +63,7 @@ const PlaylistCache = new NodeCache({
 })
 
 async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
-    const cacheKey = `user:${user_id}_${allPlaylists.sort().join("_")}`;
+    const cacheKey = `user:${user_id}_${allPlaylists.join("_")}`;
     const cachedPlaylists: Playlist[] | undefined = PlaylistCache.get<Playlist[]>(cacheKey);
 
     if (cachedPlaylists) {
@@ -77,7 +77,7 @@ async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
         return undefined;
     }
 
-    const playlists: Playlist[] = playlistsFromDB.map(playlist => ({
+    let playlists: Playlist[] = playlistsFromDB.map(playlist => ({
         id: playlist.id,
         owner_id: playlist.owner_id,
         name: playlist.name,
@@ -85,7 +85,7 @@ async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
         followers_count: playlist.followers_count
     }));
 
-    PlaylistCache.set(cacheKey, playlists);
+    PlaylistCache.set(cacheKey, playlists.sort((a, b) => b.followers_count - a.followers_count));
     return playlists;
 }
 
@@ -119,7 +119,7 @@ export async function fetchFromSpotify(user: User, headers: any) {
         });
         const allPlaylists = await Promise.all(playlistPromises);
         user.created_playlists = allPlaylists.filter(playlist => playlist.owner_id === user.id).sort((a, b) => b.followers_count - a.followers_count);
-        user.followed_playlists = allPlaylists.filter(playlist => playlist.owner_id !== user.id).sort((a, b) => b.followers_count - a.followers_count);
+        user.followed_playlists = allPlaylists.filter(playlist => playlist.owner_id !== user.id);
 
         await connectDB();
         // create or update user in the database
@@ -133,7 +133,7 @@ export async function fetchFromSpotify(user: User, headers: any) {
         }
         await User.updateOne({ id: user.id }, userForDB, { upsert: true });
 
-        const combinedPlaylists = user.created_playlists.concat(user.followed_playlists).sort((a, b) => b.followers_count - a.followers_count);
+        const combinedPlaylists = user.created_playlists.concat(user.followed_playlists);
         // create or update playlists in the database
         const playlistsForDB: PlaylistDB[] = combinedPlaylists.map(playlist => ({
             id: playlist.id,
@@ -160,7 +160,7 @@ export async function fetchFromSpotify(user: User, headers: any) {
             }
         }));
         await Playlist.bulkWrite(bulkOps);
-
+        PlaylistCache.flushAll(); // clear cache
         return user.created_playlists;
     } catch (e) {
         console.error("Error fetching user playlists:", e);
@@ -213,7 +213,6 @@ export default async function Page({ searchParams }: DashboardPageProps) {
         } else {
             // called when user logs in for the first time or logs in again after logging out (gets fresh data from Spotify)
             const userPlaylists = await fetchFromSpotify(user, headers);
-            PlaylistCache.flushAll(); // invalidate cache on retrieving fresh data
             createdPlaylistsSize = userPlaylists ? userPlaylists.length : 0;
             if (userPlaylists) {
                 totalPages = Math.ceil(userPlaylists.length / limitPerPage);

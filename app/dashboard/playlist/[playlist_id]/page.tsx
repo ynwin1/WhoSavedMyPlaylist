@@ -8,8 +8,7 @@ import PlaylistFollowersTable from "@/app/component/Playlist/PlaylistFollowersTa
 import Link from "next/link";
 import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
 import {ExternalLink} from "lucide-react";
-import {followersLimit, LimitType, paginationLimit} from "@/app/lib/utils";
-import ItemsPerPageSelector from "@/app/component/Pagination/ItemsPerPageSelector";
+import {followersLimit} from "@/app/lib/utils";
 import BackToDashboardButton from "@/app/component/Buttons/BackToDashboardButton";
 
 interface PlaylistPageProps {
@@ -77,7 +76,6 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
     // TODO - redirect to dashboard if playlist owner id is not the same as session user id
 
     if (dbPlaylist) {
-        console.log("DB Playlist: ", dbPlaylist);
         const knownFollowersCount = dbPlaylist.followers.length;
         const totalPages = Math.ceil(knownFollowersCount / limit);
         return (

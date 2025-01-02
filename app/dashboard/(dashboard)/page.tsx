@@ -11,7 +11,8 @@ import {Metadata} from "next";
 import DashboardRefreshButton from "@/app/component/Buttons/DashboardRefreshButton";
 import {followersLimit, LimitType, playlistPaginationLimit} from "@/app/lib/utils";
 import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
-import ItemsPerPageSelector, {useScreenSizeLimits} from "@/app/component/Pagination/ItemsPerPageSelector";
+import ItemsPerPageSelector from "@/app/component/Pagination/ItemsPerPageSelector";
+import NodeCache from "node-cache";
 
 export const metadata: Metadata = {
     title: 'Dashboard',
@@ -56,21 +57,35 @@ type PlaylistDB = {
     followers: string[];
 }
 
-async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
-    console.log("Fetching from database");
-    const playlistsFromDB = await Playlist.find({ id: { $in: allPlaylists } });
+const PlaylistCache = new NodeCache({
+    stdTTL: 300, // expire after 5 minutes
+    checkperiod: 60 // check every minute
+})
 
+async function fetchFromDatabase(user_id: string, allPlaylists: string[]) {
+    const playlistsFromDB = await Playlist.find({ id: { $in: allPlaylists } });
     if (!playlistsFromDB.length) {
         return undefined;
     }
 
-    const playlists = playlistsFromDB.map(playlist => ({
+    const cacheKey = `user:${user_id}_${allPlaylists.sort().join("_")}`;
+    const cachedPlaylists: Playlist[] | undefined = PlaylistCache.get<Playlist[]>(cacheKey);
+
+    if (cachedPlaylists) {
+        console.log("Returning from cache");
+        return cachedPlaylists;
+    }
+
+    const playlists: Playlist[] = playlistsFromDB.map(playlist => ({
         id: playlist.id,
         owner_id: playlist.owner_id,
         name: playlist.name,
         image: playlist.image,
         followers_count: playlist.followers_count
     }));
+
+    console.log("Fetching from database");
+    PlaylistCache.set(cacheKey, playlists);
     return playlists;
 }
 
@@ -176,7 +191,7 @@ export default async function Page({ searchParams }: DashboardPageProps) {
 
     let createdPlaylistsSize: number = 0;
 
-    const limitPerPage: number = limit || useScreenSizeLimits()[0];
+    const limitPerPage: number = limit || 4;
     const currentPage: number = page || 1;
     let totalPages: number = 0;
     let playlistsToShow: Playlist[] = [];
@@ -198,6 +213,7 @@ export default async function Page({ searchParams }: DashboardPageProps) {
         } else {
             // called when user logs in for the first time or logs in again after logging out (gets fresh data from Spotify)
             const userPlaylists = await fetchFromSpotify(user, headers);
+            PlaylistCache.flushAll(); // invalidate cache on retrieving fresh data
             createdPlaylistsSize = userPlaylists ? userPlaylists.length : 0;
             if (userPlaylists) {
                 totalPages = Math.ceil(userPlaylists.length / limitPerPage);

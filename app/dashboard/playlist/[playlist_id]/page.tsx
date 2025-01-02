@@ -106,7 +106,7 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
                         </h2>
                         <BackToDashboardButton />
                     </div>
-                    <PlaylistFollowersTable followers={knownFollowers} currentPage={page}/>
+                    <PlaylistFollowersTable followers={knownFollowers} currentPage={page} limit={limit}/>
                     <FollowersPagination totalPages={totalPages} />
                 </div>
             </div>

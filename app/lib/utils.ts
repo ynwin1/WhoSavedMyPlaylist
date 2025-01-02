@@ -1,6 +1,4 @@
-export const paginationLimit = 10;
-export const playlistPaginationLimit = 4;
-
+// Pagination Utils
 export const playlistsLimitXl = [4, 8, 12, 16, 20];
 export const playListsLimitLg = [3, 6, 9, 12, 15];
 export const playlistsLimitMd = [2, 4, 6, 8, 10];

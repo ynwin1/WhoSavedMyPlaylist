@@ -98,6 +98,17 @@ export const authOptions: AuthOptions = {
         }),
     ],
     secret: process.env.NEXTAUTH_SECRET as string,
+    cookies: {
+        state: {
+            name: 'next-auth.state',
+            options: {
+                httpOnly: true,
+                sameSite: 'lax',
+                path: '/',
+                secure: process.env.NODE_ENV === 'production'
+            }
+        }
+    },
     callbacks: {
         async jwt({ token, user, account }) {
             if (account && user) {
@@ -135,4 +146,6 @@ export const authOptions: AuthOptions = {
             };
         },
     },
+    useSecureCookies: process.env.NODE_ENV === 'production',
+    debug: process.env.NODE_ENV === 'development',
 }

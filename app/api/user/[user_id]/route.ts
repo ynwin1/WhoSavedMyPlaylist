@@ -36,27 +36,21 @@ export async function DELETE(
         }
 
         // find playlists
-        const playlists = user.playlists;
-        for (let i = 0; i < playlists.length; i++) {
-            const playlist = await Playlist.findOne({ id: playlists[i] });
-            if (playlist) {
-                // delete if playlist is owned by the user
-                if (playlist.owner_id === user.id) {
-                    await Playlist.deleteOne({ id: playlist.id });
-                } else {
-                    // remove user from followers of the playlist
-                    await Playlist.findOneAndUpdate({ id: playlist.id }, {
-                        $pull: {
-                            followers: user.id
-                        }
-                    })
-                }
-            }
-        }
+        const created_playlists = user.created_playlists;
+        await Playlist.deleteMany({ id: { $in: created_playlists } });
+
+        const followed_playlists = user.followed_playlists;
+        await Playlist.updateMany(
+            { id: { $in: followed_playlists } },
+            { $pull: { followers: user.id } }
+        );
 
         // delete user
         await User.deleteOne({ id: user.id });
+
+        return Response.json({ success: true }, { status: 200 });
     } catch (e) {
+        console.log(e);
         return Response.json({ error: (e as Error).message }, { status: 500 });
     }
 }

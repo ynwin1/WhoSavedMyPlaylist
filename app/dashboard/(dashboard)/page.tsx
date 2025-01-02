@@ -9,7 +9,7 @@ import Link from "next/link";
 import {Music2, PlayCircle} from "lucide-react";
 import {Metadata} from "next";
 import DashboardRefreshButton from "@/app/component/Buttons/DashboardRefreshButton";
-import {playlistPaginationLimit} from "@/app/lib/utils";
+import {followersLimit, LimitType, playlistPaginationLimit} from "@/app/lib/utils";
 import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
 import ItemsPerPageSelector, {useScreenSizeLimits} from "@/app/component/Pagination/ItemsPerPageSelector";
 
@@ -236,12 +236,12 @@ export default async function Page({ searchParams }: DashboardPageProps) {
                         <Music2 className="h-7 w-7 text-green-500" />
                         <h2 className="text-2xl font-bold text-white text-center">Your Public Playlists</h2>
                     </div>
-                    <ItemsPerPageSelector />
+                    <ItemsPerPageSelector limitType={LimitType.Playlist}/>
                     <div className="w-full max-md:w-[70vw] mx-auto">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {playlistsToShow.map((playlist, index) => (
                                 <Link
-                                    href={`/dashboard/playlist/${playlist.id}?page=1`}
+                                    href={`/dashboard/playlist/${playlist.id}?page=1&limit=${followersLimit[0]}`}
                                     key={index}
                                     className="transform transition-all duration-300 hover:-translate-y-1"
                                 >

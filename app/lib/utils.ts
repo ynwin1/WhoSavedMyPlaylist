@@ -8,6 +8,11 @@ export const playlistsLimitDefault = [5, 10, 15, 20];
 
 export const followersLimit = [10, 20, 50, 100, 200];
 
+export enum LimitType {
+    Playlist = "playlist",
+    Follower = "follower"
+}
+
 export const generateFollowersPagination = (currentPage: number, totalPages: number) => {
     if (totalPages <= 5) {
         return Array.from({ length: totalPages }, (_, i) => i + 1);

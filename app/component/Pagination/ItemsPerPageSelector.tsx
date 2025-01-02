@@ -1,7 +1,14 @@
 "use client";
 import React, {useEffect, useState} from 'react'
 import {usePathname, useSearchParams} from "next/navigation";
-import {playlistsLimitDefault, playListsLimitLg, playlistsLimitMd, playlistsLimitXl} from "@/app/lib/utils";
+import {
+    followersLimit,
+    LimitType,
+    playlistsLimitDefault,
+    playListsLimitLg,
+    playlistsLimitMd,
+    playlistsLimitXl
+} from "@/app/lib/utils";
 import Link from "next/link";
 import {ChevronDown} from "lucide-react";
 
@@ -40,11 +47,18 @@ export function useScreenSizeLimits() {
     return limitList;
 }
 
-const ItemsPerPageSelector = () => {
+const ItemsPerPageSelector = ({limitType}: {limitType: LimitType}) => {
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    // get items per page list based on window size
-    let limitList: number[] = useScreenSizeLimits();
+    // get items per page list based on limit type
+    let limitList: number[] = [];
+    switch (limitType) {
+        case LimitType.Playlist:
+            limitList = useScreenSizeLimits();
+            break;
+        default:
+            limitList = followersLimit;
+    }
     const currentLimit = Number(searchParams.get('limit')) || limitList[0];
 
     const createItemsPerPageURL = (itemsPerPage: number) => {
@@ -54,7 +68,7 @@ const ItemsPerPageSelector = () => {
     }
 
     return (
-        <div className="flex flex-col items-center mt-6 mb-6">
+        <div className="flex flex-col items-center mb-6">
             <div className="relative">
                 <div className="peer flex items-center gap-2 text-white bg-spotify hover:bg-green-800 rounded-full px-4 py-2 cursor-pointer">
                     <span className="text-sm font-medium">Show {currentLimit} items</span>

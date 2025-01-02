@@ -2,7 +2,8 @@ import React from 'react';
 import {Follower} from "@/app/dashboard/playlist/[playlist_id]/page";
 import Link from "next/link";
 import { ExternalLink, Users } from 'lucide-react';
-import {paginationLimit} from "@/app/lib/utils";
+import {LimitType, paginationLimit} from "@/app/lib/utils";
+import ItemsPerPageSelector from "@/app/component/Pagination/ItemsPerPageSelector";
 
 const PlaylistFollowersTable = ({ followers, currentPage }: { followers: Follower[], currentPage: number }) => {
     const followersToShow = followers.slice((currentPage - 1) * paginationLimit, currentPage * paginationLimit);
@@ -15,6 +16,8 @@ const PlaylistFollowersTable = ({ followers, currentPage }: { followers: Followe
                     Followers
                 </h1>
             </div>
+
+            {followers.length !== 0 && <ItemsPerPageSelector limitType={LimitType.Follower} />}
 
             <div className="w-[60vw] max-md:w-[90vw] rounded-xl overflow-hidden bg-black/30 backdrop-blur-md border border-white/10">
                 <div className="overflow-x-auto">

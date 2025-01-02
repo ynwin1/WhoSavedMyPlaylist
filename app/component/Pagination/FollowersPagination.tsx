@@ -50,9 +50,9 @@ type PaginationNumberProps = {
 
 function PaginationNumber({href, page, position, isCurrentPage} : PaginationNumberProps) {
     const className = clsx(
-        'flex h-10 w-10 items-center justify-center rounded-full border border-white',
+        'flex h-10 w-10 items-center justify-center rounded-full border-2 border-white',
         {
-            'z-10 bg-spotify border-2 border-white text-white': isCurrentPage,
+            'z-10 bg-spotify text-white': isCurrentPage,
             'hover:bg-green-700': !isCurrentPage && position !== 'middle',
             'text-white': position === 'middle',
         }
@@ -67,7 +67,7 @@ function PaginationNumber({href, page, position, isCurrentPage} : PaginationNumb
     }
 
     return (
-        <Link href={href}>
+        <Link className={className} href={href}>
             {page}
         </Link>
     )

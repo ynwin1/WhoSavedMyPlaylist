@@ -32,7 +32,7 @@ const PopUp = ({user_id, setShowPopUp} : {user_id: string, setShowPopUp : React.
                     <button
                         onClick={() => delete_user(user_id)}
                         className="
-                        px-4 py-2 rounded-full bg-red-500 hover:bg-red-800 text-white hover:text-black font-medium
+                        px-4 py-2 rounded-full bg-red-500 hover:bg-red-800 text-white font-medium
                              transform transition-all duration-300 hover:scale-105
                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black
                              border-2 border-white
@@ -43,7 +43,7 @@ const PopUp = ({user_id, setShowPopUp} : {user_id: string, setShowPopUp : React.
                     <button
                         onClick={() => setShowPopUp(false)}
                         className="
-                        px-4 py-2 rounded-full bg-green-500 hover:bg-green-800 text-white hover:text-black font-medium
+                        px-4 py-2 rounded-full bg-green-500 hover:bg-green-800 text-white font-medium
                              transform transition-all duration-300 hover:scale-105
                              focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black
                              border-2 border-white

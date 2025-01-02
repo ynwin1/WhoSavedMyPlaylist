@@ -3,7 +3,7 @@ import connectDB from "@/app/lib/mongodb";
 import User from "@/app/model/User";
 import Playlist from "@/app/model/Playlist";
 import {getServerSession} from "next-auth/next";
-import {authOptions, CustomSession} from "@/app/api/auth/[...nextauth]/route";
+import {authOptions, CustomSession} from "@/app/lib/auth";
 
 type Props = {
     params: Promise<{user_id: string}>

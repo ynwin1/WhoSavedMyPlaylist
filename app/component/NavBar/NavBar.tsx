@@ -5,7 +5,7 @@ import SignInButton from "@/app/component/Buttons/SignInButton";
 import { Music2 } from 'lucide-react';
 import Link from "next/link";
 import SignOutButton from "@/app/component/Buttons/SignOutButton";
-import {CustomSession} from "@/app/api/auth/[...nextauth]/route";
+import {CustomSession} from "@/app/lib/auth";
 
 const NavBar = () => {
     const { data: session } = useSession({

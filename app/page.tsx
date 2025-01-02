@@ -3,7 +3,7 @@ import SignInButton from '@/app/component/Buttons/SignInButton';
 import {Users, Lock, PersonStanding, HandHeart} from 'lucide-react';
 import FeatureCard from '@/app/component/Home/FeatureCard';
 import {getServerSession} from "next-auth/next";
-import {authOptions, CustomSession} from "@/app/api/auth/[...nextauth]/route";
+import {authOptions, CustomSession} from "@/app/lib/auth";
 import DashboardButton from "@/app/component/Buttons/DashboardButton";
 import {Metadata} from "next";
 

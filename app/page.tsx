@@ -3,7 +3,7 @@ import SignInButton from '@/app/component/Buttons/SignInButton';
 import {Users, Lock, PersonStanding, HandHeart} from 'lucide-react';
 import FeatureCard from '@/app/component/Home/FeatureCard';
 import {getServerSession} from "next-auth/next";
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
+import {authOptions, CustomSession} from "@/app/api/auth/[...nextauth]/route";
 import DashboardButton from "@/app/component/Buttons/DashboardButton";
 import {Metadata} from "next";
 
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-    const session = await getServerSession(authOptions);
+    const session: CustomSession | null = await getServerSession(authOptions);
 
     return (
         <div className="min-h-screen bg-black text-white">

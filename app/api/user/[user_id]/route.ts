@@ -3,7 +3,7 @@ import connectDB from "@/app/lib/mongodb";
 import User from "@/app/model/User";
 import Playlist from "@/app/model/Playlist";
 import {getServerSession} from "next-auth/next";
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
+import {authOptions, CustomSession} from "@/app/api/auth/[...nextauth]/route";
 
 type Props = {
     params: Promise<{user_id: string}>
@@ -16,7 +16,7 @@ export async function DELETE(
 ) {
     try {
         const { user_id } = await props.params;
-        const session = await getServerSession(authOptions);
+        const session: CustomSession | null = await getServerSession(authOptions);
 
         // check if user is logged in
         if (!session) {

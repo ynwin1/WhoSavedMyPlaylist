@@ -11,7 +11,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${lusitana.className} antialiased`}
+        className={`${lusitana.className} antialiased bg-black`}
       >
       <SessionProvider>
           {children}

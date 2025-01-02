@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import {authOptions, CustomSession} from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import User from "@/app/model/User";
 import Playlist from "@/app/model/Playlist";
@@ -170,7 +170,7 @@ export async function fetchFromSpotify(user: User, headers: any) {
 }
 
 export default async function Page({ searchParams }: DashboardPageProps) {
-    const session = await getServerSession(authOptions);
+    const session: CustomSession | null = await getServerSession(authOptions);
     const { page } = await searchParams;
     const { limit } = await searchParams;
 

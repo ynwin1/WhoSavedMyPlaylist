@@ -5,10 +5,12 @@ import SignInButton from "@/app/component/Buttons/SignInButton";
 import { Music2 } from 'lucide-react';
 import Link from "next/link";
 import SignOutButton from "@/app/component/Buttons/SignOutButton";
+import {CustomSession} from "@/app/api/auth/[...nextauth]/route";
 
 const NavBar = () => {
-    const {data: session} = useSession();
-
+    const { data: session } = useSession({
+        required: false
+    }) as { data: CustomSession | null };
     const id = session?.user.id;
     if (!id) {
         return (

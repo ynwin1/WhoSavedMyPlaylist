@@ -1,4 +1,4 @@
-import NextAuth, { DefaultSession, AuthOptions } from "next-auth";
+import NextAuth, { Session, DefaultSession, AuthOptions } from "next-auth";
 import SpotifyProvider from "next-auth/providers/spotify";
 import { JWT } from "next-auth/jwt";
 
@@ -9,15 +9,24 @@ const scopes = [
     "playlist-read-private",
 ].join(" ");
 
-declare module "next-auth" {
-    interface Session extends DefaultSession {
-        accessToken?: string;
-        user: {
-            id?: string;
-            name?: string;
-            image?: string;
-        } & DefaultSession["user"];
-    }
+// declare module "next-auth" {
+//     interface Session extends DefaultSession {
+//         accessToken?: string;
+//         user: {
+//             id?: string;
+//             name?: string;
+//             image?: string;
+//         } & DefaultSession["user"];
+//     }
+// }
+
+export interface CustomSession extends Session {
+    accessToken: string;
+    user: {
+        id: string;
+        name?: string | null;
+        image?: string | null;
+    } & DefaultSession["user"]
 }
 
 interface Token extends JWT {
@@ -77,17 +86,18 @@ export const authOptions: AuthOptions = {
             // Access token has expired, refresh it
             return await refreshAccessToken(token as Token);
         },
-        async session({ session, token }) {
+        async session({ session, token }): Promise<CustomSession> {
             // Pass properties from token to session
             return {
                 ...session,
                 accessToken: token.accessToken as string,
                 user: {
                     ...session.user,
-                    id: token.id,
+                    id: token.id as string,
                     name: token.name,
-                    image: token.image,
+                    image: token.image as string,
                 },
+                expires: session.expires,
             };
         },
     },

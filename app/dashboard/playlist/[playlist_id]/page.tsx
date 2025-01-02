@@ -1,5 +1,5 @@
 import React from 'react'
-import {authOptions} from "@/app/api/auth/[...nextauth]/route";
+import {authOptions, CustomSession} from "@/app/api/auth/[...nextauth]/route";
 import {getServerSession} from "next-auth/next";
 import {redirect} from "next/navigation";
 import Playlist from "@/app/model/Playlist";
@@ -34,7 +34,7 @@ const Page = async ({params, searchParams}: PlaylistPageProps) => {
     let knownFollowers: Follower[] = [];
 
     try {
-        const session = await getServerSession(authOptions);
+        const session: CustomSession | null = await getServerSession(authOptions);
         dbPlaylist = await Playlist.findOne({id: playlist_id}).lean();
         if (!session) {
             redirect("/");

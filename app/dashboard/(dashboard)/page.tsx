@@ -13,6 +13,8 @@ import {followersLimit, LimitType, playlistPaginationLimit} from "@/app/lib/util
 import FollowersPagination from "@/app/component/Pagination/FollowersPagination";
 import ItemsPerPageSelector from "@/app/component/Pagination/ItemsPerPageSelector";
 import NodeCache from "node-cache";
+import DeleteUserButton from "@/app/component/Buttons/DeleteUserButton";
+import toast from "react-hot-toast";
 
 export const metadata: Metadata = {
     title: 'Dashboard',
@@ -284,6 +286,7 @@ export default async function Page({ searchParams }: DashboardPageProps) {
                         )}
 
                         <FollowersPagination totalPages={totalPages} />
+                        <DeleteUserButton user_id={user.id} />
                     </div>
                 </div>
             </div>

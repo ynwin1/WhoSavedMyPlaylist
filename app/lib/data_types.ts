@@ -1,3 +1,5 @@
+import {PlanType} from "@/app/model/User";
+
 export type User = {
     id: string;
     name: string;
@@ -13,6 +15,11 @@ export type UserDB = {
     created_playlists: string[];
     followed_playlists: string[];
     isLoggedIn: true;
+    plan: {
+        type: PlanType;
+        joined: Date;
+        expires: Date | null;
+    }
 }
 
 export type Playlist = {

@@ -1,5 +1,5 @@
 "use server"
-import User from "@/app/model/User";
+import User, {PlanType} from "@/app/model/User";
 import {Playlist as PlaylistT, PlaylistDB, User as UserT, UserDB} from "@/app/lib/data_types"
 import Playlist from "@/app/model/Playlist";
 import connectDB from "@/app/lib/mongodb";
@@ -30,7 +30,8 @@ export async function fetchFromDatabase(user_id: string, allPlaylists: string[])
         owner_id: playlist.owner_id,
         name: playlist.name,
         image: playlist.image,
-        followers_count: playlist.followers_count
+        followers_count: playlist.followers_count,
+        known_followers_count: playlist.followers.length
     }));
 
     PlaylistCache.set(cacheKey, playlists.sort((a, b) => b.followers_count - a.followers_count));
@@ -66,6 +67,11 @@ export async function fetchFromSpotify(user: UserT, headers: any) {
             return playlist;
         });
         const allPlaylists = await Promise.all(playlistPromises);
+        // update all playlists with known followers count
+        for (let playlist of allPlaylists) {
+            const knownFollowersQuery = await Playlist.findOne({ id: playlist.id }).select("followers").lean();
+            playlist.known_followers_count = knownFollowersQuery ? knownFollowersQuery.followers.length : 0;
+        }
         user.created_playlists = allPlaylists.filter(playlist => playlist.owner_id === user.id).sort((a, b) => b.followers_count - a.followers_count);
         user.followed_playlists = allPlaylists.filter(playlist => playlist.owner_id !== user.id);
 
@@ -77,7 +83,12 @@ export async function fetchFromSpotify(user: UserT, headers: any) {
             image: user.image,
             created_playlists: user.created_playlists.map(playlist => playlist.id),
             followed_playlists: user.followed_playlists.map(playlist => playlist.id),
-            isLoggedIn: true
+            isLoggedIn: true,
+            plan: {
+                type: PlanType.LIFETIME,
+                joined: new Date(),
+                expires: null
+            }
         }
         await User.updateOne({ id: user.id }, userForDB, { upsert: true });
 

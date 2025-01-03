@@ -79,10 +79,31 @@ export async function fetchFromSpotify(user: UserT, headers: any) {
             followed_playlists: user.followed_playlists.map(playlist => playlist.id),
             isLoggedIn: true
         }
+
+        /*
+        * If existing user, extract created and followed playlists from the database
+        * extract deleted and unfollowed playlists from the result (if any)
+        * for deleted playlists, remove them from the database, for unfollowed playlists, remove user from followers list
+        */
+        const existingUser = await User.findOne({ id: user.id });
+        if (existingUser) {
+            const createdPlaylistsFromDB: string[] = existingUser.created_playlists;
+            const followedPlaylistsFromDB: string[] = existingUser.followed_playlists;
+
+            // deleted playlists are those that are in db but not in user.created_playlists
+            const deletedPlaylists: string[] = createdPlaylistsFromDB.filter(playlist => !user.created_playlists.map(playlist => playlist.id).includes(playlist));
+            // unfollowed playlists are those that are in db but not in user.followed_playlists
+            const unfollowedPlaylists: string[] = followedPlaylistsFromDB.filter(playlist => !user.followed_playlists.map(playlist => playlist.id).includes(playlist));
+
+            // remove deleted playlists from the database
+            await Playlist.deleteMany({ id: { $in: deletedPlaylists } });
+            // remove user from unfollowed playlists' followers list
+            await Playlist.updateMany({ id: { $in: unfollowedPlaylists } }, { $pull: { followers: user.id } });
+        }
         await User.updateOne({ id: user.id }, userForDB, { upsert: true });
 
-        const combinedPlaylists = user.created_playlists.concat(user.followed_playlists);
         // create or update playlists in the database
+        const combinedPlaylists = user.created_playlists.concat(user.followed_playlists);
         const playlistsForDB: PlaylistDB[] = combinedPlaylists.map(playlist => ({
             id: playlist.id,
             owner_id: playlist.owner_id,

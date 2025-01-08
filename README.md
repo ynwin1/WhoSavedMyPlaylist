@@ -25,6 +25,10 @@ The project is created using Next.js, Tailwind CSS and MongoDB.
 
 There are only two models; User and Playlist. Each contains information of the other, making it easy to retrieve user info and playlist information.
 
+## Authentication & Authorization
+
+I am using the NextAuth library with the Spotify provider to manage user authentication. This delegates the authentication process to Spotify, making sure that user credentials are handled securely by a trusted third party. While I am still responsible for managing session and token security, using Spotify's system simplifies authentication and amplifies user data protection as I leverage their infrastructure.
+
 ## Database Optimizations
 
 ### Caching System
